@@ -1,0 +1,2 @@
+# ChinesePinyinIntelliSenseExtender
+VisualStudio中文代码拼音补全拓展
