@@ -5,7 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
+using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio.Core.Imaging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
@@ -44,7 +44,8 @@ internal class PinyinCompletionSource : IAsyncCompletionSource
 
     public async Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
-        if (s_getCompletionContextRecursionTag.Value)
+        if (s_getCompletionContextRecursionTag.Value
+            || !GeneralOptions.Instance.Enable)
         {
             return null;
         }
@@ -60,11 +61,14 @@ internal class PinyinCompletionSource : IAsyncCompletionSource
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
-            var pinyinCompletions = allCompletionItems.AsParallel()
-                                                      .WithCancellation(token)
-                                                      .Select(TryCreatePinyinCompletionItem)
-                                                      .Where(static m => m is not null)
-                                                      .ToImmutableArray();
+            var query = allCompletionItems.AsParallel().WithCancellation(token);
+
+            query = GeneralOptions.Instance.CheckFirstCharOnly
+                    ? query.Select(m => TryCreatePinyinCompletionItem(m, ChineseCheckUtil.StartWithChinese))
+                    : query.Select(m => TryCreatePinyinCompletionItem(m, ChineseCheckUtil.ContainsChinese));
+
+            var pinyinCompletions = query.Where(static m => m is not null)
+                                         .ToImmutableArray();
 
             return pinyinCompletions.Length == 0
                    ? null
@@ -98,11 +102,11 @@ internal class PinyinCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private CompletionItem TryCreatePinyinCompletionItem(CompletionItem originCompletionItem)
+    private CompletionItem TryCreatePinyinCompletionItem(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck)
     {
         var originInsertText = originCompletionItem.InsertText;
 
-        if (!ChineseCheckUtil.ContainsChinese(originInsertText))
+        if (!shouldProcessCheck(originInsertText))
         {
             return null;
         }

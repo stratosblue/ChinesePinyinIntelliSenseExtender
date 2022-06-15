@@ -1,11 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
-
+using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
@@ -46,41 +47,37 @@ internal class PinyinCompletionSourceProvider : IAsyncCompletionSourceProvider
 
         try
         {
-            if (_lazyAsyncCompletionSourceProviders is null
-                || _lazyAsyncCompletionSourceProviders.Length == 0)
-            {
-                Debug.WriteLine("None AsyncCompletionSourceProvider found. Return EmptyAsyncCompletionSource.");
-                return EmptyAsyncCompletionSource.Instance;
-            }
-
             if (_completionSourceCache.TryGetValue(textView, out var itemSource))
             {
                 Debug.WriteLine($"CompletionSource cache hit by {textView}.");
                 return itemSource;
             }
-
             Debug.WriteLine($"No completionSource cache for {textView}.");
 
-            var otherAsyncCompletionSources = _lazyAsyncCompletionSourceProviders
-                .Select(lazy =>
-                {
-                    if (lazy.Value is IAsyncCompletionSourceProvider provider
-                        && provider.GetType() != typeof(PinyinCompletionSourceProvider))
+            List<IAsyncCompletionSource>? otherAsyncCompletionSources = null;
+            if (!CheckShouldIgnore(textView))
+            {
+                otherAsyncCompletionSources = _lazyAsyncCompletionSourceProviders
+                    .Select(lazy =>
                     {
-                        try
+                        if (lazy.Value is IAsyncCompletionSourceProvider provider
+                            && provider.GetType() != typeof(PinyinCompletionSourceProvider))
                         {
-                            return provider.GetOrCreate(textView);
+                            try
+                            {
+                                return provider.GetOrCreate(textView);
+                            }
+                            catch { }
                         }
-                        catch { }
-                    }
-                    return null;
-                })
-                .Where(m => m is not null)
-                .ToList();
+                        return null;
+                    })
+                    .Where(m => m is not null)
+                    .ToList();
+            }
 
-            Debug.WriteLine($"Total {otherAsyncCompletionSources.Count} IAsyncCompletionSource found.");
+            Debug.WriteLine($"Total {otherAsyncCompletionSources?.Count ?? 0} IAsyncCompletionSource found.");
 
-            IAsyncCompletionSource completionSource = otherAsyncCompletionSources.Count == 0
+            IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
                                                       ? EmptyAsyncCompletionSource.Instance
                                                       : new PinyinCompletionSource(otherAsyncCompletionSources);
 
@@ -95,6 +92,38 @@ internal class PinyinCompletionSourceProvider : IAsyncCompletionSourceProvider
     }
 
     #endregion Public 方法
+
+    private bool CheckShouldIgnore(ITextView textView)
+    {
+        if (_lazyAsyncCompletionSourceProviders is null
+            || _lazyAsyncCompletionSourceProviders.Length == 0)
+        {
+            Debug.WriteLine("None AsyncCompletionSourceProvider found. ");
+            return true;
+        }
+
+        if (!GeneralOptions.Instance.Enable)
+        {
+            Debug.WriteLine("Extension disabled.");
+            return true;
+        }
+
+        if (GeneralOptions.Instance.ExcludeExtensionArray.Length > 0
+            && textView.TextBuffer.Properties.TryGetProperty<ITextDocument>(typeof(ITextDocument), out var textDocument)
+            && textDocument?.FilePath?.Length > 0)
+        {
+            var filePath = textDocument.FilePath;
+            foreach (var item in GeneralOptions.Instance.ExcludeExtensionArray)
+            {
+                if (filePath.EndsWith(item))
+                {
+                    Debug.WriteLine("File extension ignored.");
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     #region Private 类
 

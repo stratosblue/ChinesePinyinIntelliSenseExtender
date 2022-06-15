@@ -29,7 +29,7 @@ internal static class ChineseCheckUtil
         {
             foreach (var item in value)
             {
-                if (item >= 0x4e00 && item <= 0x9fbb)
+                if (IsChinese(item))
                 {
                     isContainsChinese = ObjectBoolean.True;
                     break;
@@ -46,5 +46,22 @@ internal static class ChineseCheckUtil
         return isContainsChinese;
     }
 
+    public static bool StartWithChinese(string value)
+    {
+        if (value.Length < 255) //不处理过长的名称
+        {
+            return IsChinese(value[0]);
+        }
+        else
+        {
+            Debug.WriteLine($"ChineseCheck value \"{value}\" is too long. Return false.");
+        }
+
+        return false;
+    }
+
     #endregion Public 方法
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fbb;
 }
