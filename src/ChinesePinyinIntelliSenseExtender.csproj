@@ -52,6 +52,8 @@
     </Compile>
     <Compile Include="Options\OptionPages.cs" />
     <Compile Include="Options\Model\GeneralOptions.cs" />
+    <Compile Include="PinyinCompletionSource.cs" />
+    <Compile Include="PinyinCompletionSourceProvider.cs" />
     <Compile Include="Util\ChineseCharPinyinMap.cs" />
     <Compile Include="Util\ChineseCharPinyinConverter.cs" />
     <Compile Include="PinyinAsyncCompletionSource.cs" />

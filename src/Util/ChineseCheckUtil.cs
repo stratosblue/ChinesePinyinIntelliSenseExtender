@@ -17,11 +17,11 @@ internal static class ChineseCheckUtil
     {
         if (s_chineseCheckCache.TryGetValue(value, out var isContainsChinese))
         {
-            Debug.WriteLine($"ChineseCheck cache hit by {value}.");
+            //Debug.WriteLine($"ChineseCheck cache hit by {value}.");
             return isContainsChinese;
         }
 
-        Debug.WriteLine($"No chineseCheck cache for {value}.");
+        //Debug.WriteLine($"No chineseCheck cache for {value}.");
 
         isContainsChinese = ObjectBoolean.False;
 

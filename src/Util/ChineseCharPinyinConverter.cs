@@ -22,7 +22,7 @@ internal static class ChineseCharPinyinConverter
             return pinyin;
         }
 
-        Debug.WriteLine($"No pinyin cache for {value}.");
+        //Debug.WriteLine($"No pinyin cache for {value}.");
 
         pinyin = InternalConvert(value);
         s_pinyinCache.Add(value, pinyin);
