@@ -54,8 +54,8 @@
     <Compile Include="Options\Model\GeneralOptions.cs" />
     <Compile Include="Util\ChineseCharPinyinMap.cs" />
     <Compile Include="Util\ChineseCharPinyinConverter.cs" />
-    <Compile Include="PinyinCompletionSource.cs" />
-    <Compile Include="PinyinCompletionSourceProvider.cs" />
+    <Compile Include="PinyinAsyncCompletionSource.cs" />
+    <Compile Include="PinyinAsyncCompletionSourceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\ChineseCheckUtil.cs" />
     <Compile Include="ObjectBoolean.cs" />

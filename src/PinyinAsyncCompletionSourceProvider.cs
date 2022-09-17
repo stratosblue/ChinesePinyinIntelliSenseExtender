@@ -18,7 +18,7 @@ namespace ChinesePinyinIntelliSenseExtender;
 [Export(typeof(IAsyncCompletionSourceProvider))]
 [Name("中文代码拼音补全")]
 [ContentType("text")]
-internal class PinyinCompletionSourceProvider : IAsyncCompletionSourceProvider
+internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvider
 {
     #region Private 字段
 
@@ -61,7 +61,7 @@ internal class PinyinCompletionSourceProvider : IAsyncCompletionSourceProvider
                     .Select(lazy =>
                     {
                         if (lazy.Value is IAsyncCompletionSourceProvider provider
-                            && provider.GetType() != typeof(PinyinCompletionSourceProvider))
+                            && provider.GetType() != typeof(PinyinAsyncCompletionSourceProvider))
                         {
                             try
                             {
@@ -79,7 +79,7 @@ internal class PinyinCompletionSourceProvider : IAsyncCompletionSourceProvider
 
             IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
                                                       ? EmptyAsyncCompletionSource.Instance
-                                                      : new PinyinCompletionSource(otherAsyncCompletionSources);
+                                                      : new PinyinAsyncCompletionSource(otherAsyncCompletionSources);
 
             _completionSourceCache.Add(textView, completionSource);
 

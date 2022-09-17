@@ -14,7 +14,7 @@ using Microsoft.VisualStudio.Text;
 
 namespace ChinesePinyinIntelliSenseExtender;
 
-internal class PinyinCompletionSource : IAsyncCompletionSource
+internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 {
     #region Private 字段
 
@@ -33,7 +33,7 @@ internal class PinyinCompletionSource : IAsyncCompletionSource
 
     #region Public 构造函数
 
-    public PinyinCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources)
+    public PinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources)
     {
         _otherAsyncCompletionSources = otherAsyncCompletionSources;
     }
