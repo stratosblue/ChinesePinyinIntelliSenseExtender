@@ -63,5 +63,5 @@ internal static class ChineseCheckUtil
     #endregion Public 方法
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fbb;
+    private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fd5;
 }

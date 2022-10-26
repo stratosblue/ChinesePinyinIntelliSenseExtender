@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using ChinesePinyinIntelliSenseExtender.Options;
+using ChinesePinyinIntelliSenseExtender.Util;
 using Microsoft.VisualStudio.Core.Imaging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
@@ -61,11 +63,13 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
+            var table = await CharacterTable.MakeTableAsync(@"C:\Users\Liu00\AppData\Roaming\Rime\pinyin_simp.dict.yaml", '\t');
+
+            Func<string, bool> method = GeneralOptions.Instance.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
+
             var query = allCompletionItems.AsParallel().WithCancellation(token);
 
-            query = GeneralOptions.Instance.CheckFirstCharOnly
-                    ? query.Select(m => TryCreatePinyinCompletionItem(m, ChineseCheckUtil.StartWithChinese))
-                    : query.Select(m => TryCreatePinyinCompletionItem(m, ChineseCheckUtil.ContainsChinese));
+            query = query.SelectMany(m => CreateCompletionItemWithConvertion(m, method, table));
 
             var pinyinCompletions = query.Where(static m => m is not null)
                                          .ToImmutableArray();
@@ -137,6 +141,78 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
         return appendCompletionItem;
     }
+
+    ConditionalWeakTable<string, IEnumerable<string>> t = new();
+
+    private IEnumerable<CompletionItem> CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table)
+    {
+        var originInsertText = originCompletionItem.InsertText;
+
+        if (!shouldProcessCheck(originInsertText))
+        {
+            return Enumerable.Empty<CompletionItem>();
+        }
+
+        if (!t.TryGetValue(originInsertText, out IEnumerable<string> spells))
+        {
+            spells = Enumerable.Repeat(string.Empty, 1);
+            for (int k = 0; k < originInsertText.Length; k++)
+            {
+                var item = originInsertText[k];
+                spells =
+                    from i in spells
+                    from j in table.GetSpells(item.ToString())
+                    select i + j;
+                t.Add(originInsertText.Substring(0, k + 1), spells);
+            }
+        }
+
+        if (spells.Count() == 1 && string.Equals(originInsertText, spells.First(), StringComparison.Ordinal))
+        {
+            return Enumerable.Empty<CompletionItem>();
+        }
+
+        // 获取 F# 中特殊标识符（包含空格等特殊字符）的实际写法。F# 并没有将真正要写到代码里的内容存到 CompletionItem.InsertText 里，而是放在了
+        // CompletionItem.Properties["RoslynCompletionItemData"].Value.Properties["NameInCode"] 中，因此需要用反射来获取。
+        // 下面是 vs F# 扩展插入提示项的方法：
+        // https://github.com/dotnet/fsharp/blob/main/vsintegration/src/FSharp.Editor/Completion/CompletionProvider.fs#L250
+        if (originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data))
+        {
+            var dataType = data.GetType();
+            if (dataType.FullName == "Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncCompletion.CompletionItemData")
+            {
+                var RoslynItem = dataType.GetProperty("RoslynItem").GetMethod.Invoke(data, Array.Empty<object>());
+                var properties = (ImmutableDictionary<string, string>)RoslynItem.GetType().GetProperty("Properties").GetMethod.Invoke(RoslynItem, Array.Empty<object>());
+                if (properties.TryGetValue("NameInCode", out var code))
+                {
+                    originInsertText = code;
+                }
+            }
+        }
+
+        return spells.AsParallel().Select(spell =>
+        {
+            CompletionItem appendCompletionItem = new(
+                displayText: $"{originCompletionItem.DisplayText} [{spell}]",
+                source: this,
+                icon: originCompletionItem.Icon,
+                filters: s_chineseFilters,
+                suffix: originCompletionItem.Suffix,
+                insertText: originInsertText,
+                sortText: spell,
+                filterText: spell,
+                automationText: originCompletionItem.AutomationText,
+                attributeIcons: originCompletionItem.AttributeIcons,
+                commitCharacters: originCompletionItem.CommitCharacters,
+                applicableToSpan: originCompletionItem.ApplicableToSpan,
+                isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
+                isPreselected: originCompletionItem.IsPreselected);
+
+            appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
+            return appendCompletionItem;
+        });
+    }
+
 
     #endregion impl
 }
