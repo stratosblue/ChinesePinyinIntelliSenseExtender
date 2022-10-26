@@ -64,4 +64,14 @@ internal static class ChineseCheckUtil
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fd5;
+
+    internal static string CapitalizeLeadingCharacter(this string str)
+    {
+        if (string.IsNullOrEmpty(str)) return string.Empty;
+        else if ('a' <= str[0] && str[0] <= 'z')
+        {
+            return char.ToUpper(str[0]) + str.Substring(1);
+        }
+        else return str;
+    }
 }

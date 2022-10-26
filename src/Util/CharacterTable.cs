@@ -1,67 +1,117 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;
 
 internal class CharacterTable
 {
-    public static string tablePath = @"D:\Documents\Codes\source\repos\ChinesePinyinIntelliSenseExtender\src\wubi86_jidian.dict.yaml";
-    //private static int skipRows = 23;
-    public static char separator = '\t';
+    private const char separator = '\t';
+    private static CharacterTable instance;
 
-    private static Dictionary<(string path, char separator), CharacterTable> singleton = new();
-    private Dictionary<string, IEnumerable<string>> cache;
+    private Dictionary<string, IEnumerable<string>> table;
+    private ConcurrentDictionary<string, IEnumerable<string>> cache = new();
+    private bool lastDisallowMultipleSpellings;
 
-    private CharacterTable() { }
+    public string TablePath { get; }
 
-    public static async Task<CharacterTable> MakeTableAsync(string tablePath, char separator)
+    private CharacterTable(string tablePath, Dictionary<string, IEnumerable<string>> table)
     {
-        if (singleton.TryGetValue((tablePath, separator), out var a)) return a;
+        this.TablePath = tablePath;
+        this.table = table;
+    }
 
-        using var f = File.OpenText(tablePath);
-        var x = await f.ReadToEndAsync();
-        var dict =
-            x
-                .Split('\n')
-                .AsParallel()
-                .Where(i => i.Length > 3 && i[1] == separator)
-                .Select(i =>
-                {
-                    var r = i.Split(separator);
-                    return (r[0], CapitalizeLeadingCharacter(r[1]));
-                }).GroupBy(i => i.Item1)
-                .ToDictionary(i => i.Key,
-                    i => i.Select(i => i.Item2));
+    public static async Task<CharacterTable> CreateTableAsync(string tablePath)
+    {
+        SemaphoreSlim slim = new(1, 1);
+        await slim.WaitAsync();
 
-        var r = singleton[(tablePath, separator)] = new CharacterTable
+        if (instance != null)
         {
-            cache = dict
-        };
+            if (instance.TablePath == tablePath)
+            {
+                return instance;
+            }
+        }
+
+        Debug.WriteLine($"字表 '{tablePath}' 不存在，将创建表");
+        Dictionary<string, IEnumerable<string>> dict;
+        try
+        {
+            using var reader = File.OpenText(tablePath);
+            Debug.WriteLine($"开始读取字典 '{tablePath}'");
+            Stopwatch sw = Stopwatch.StartNew();
+            var lines = await reader.ReadToEndAsync();
+
+            dict =
+                lines
+                    .Split('\n')
+                    .AsParallel()
+                    .Where(i => i.Length > 3 && i[1] == separator)
+                    .Select(i =>
+                    {
+                        var r = i.Split(separator);
+                        return (r[0], r[1].CapitalizeLeadingCharacter());
+                    }).GroupBy(i => i.Item1)
+                    .ToDictionary(i => i.Key, i => i.Select(i => i.Item2));
+            sw.Stop();
+            Debug.WriteLine($"字典 '{tablePath}' 读取完成, 用时 {sw.Elapsed}");
+        }
+        catch (Exception e)
+        {
+            Debug.WriteLine($"读取字典 '{tablePath}' 并创建字表时出错: \n{e}");
+            throw;
+        }
+        finally
+        {
+            slim.Release();
+        }
+
+        return instance = new CharacterTable(tablePath, dict);
+    }
+
+    public IEnumerable<string> GetCharacterSpellings(string str)
+    {
+        if (table.TryGetValue(str, out var r)) return r;
+        r = Enumerable.Repeat(str, 1);
+        table[str] = r;
         return r;
     }
 
-    internal static string CapitalizeLeadingCharacter(string str)
+    public IEnumerable<string> Convert(string value, bool disallowMultipleSpellings)
     {
-        if (string.IsNullOrEmpty(str)) return string.Empty;
-        else if ('a' <= str[0] && str[0] <= 'z')
+        if (disallowMultipleSpellings != lastDisallowMultipleSpellings)
         {
-            return char.ToUpper(str[0]) + str.Substring(1);
+            lastDisallowMultipleSpellings = disallowMultipleSpellings;
+            Debug.WriteLine($"DisallowMultipleSpellings changed to {disallowMultipleSpellings}. Cleaning cache.");
+            cache.Clear();
         }
-        else return str;
-    }
 
-    public IEnumerable<string> GetSpells(string str)
-    {
-        if (cache.ContainsKey(str))
+        if (cache.TryGetValue(value, out var spellings))
         {
-            return cache[str];
+            return spellings;
         }
-        var r = Enumerable.Repeat(str, 1);
-        cache[str] = r;
-        return r;
+
+        Debug.WriteLine($"No spelling caches for {value}.");
+
+        spellings = Enumerable.Repeat(string.Empty, 1);
+        for (int k = 0; k < value.Length; k++)
+        {
+            var item = value[k];
+            var result = GetCharacterSpellings(item.ToString());
+            spellings = disallowMultipleSpellings ?
+                Enumerable.Repeat(spellings.First() + result.First(), 1)
+                : from i in spellings
+                  from j in result
+                  select i + j;
+            cache.AddOrUpdate(value.Substring(0, k + 1), spellings, (_, item) => item);
+        }
+
+        return spellings;
     }
 }

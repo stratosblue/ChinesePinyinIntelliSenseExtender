@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -61,15 +62,26 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
+            var go = GeneralOptions.Instance;
+            var tablePath = go.CustomDictionaryPath;
+            if (string.IsNullOrEmpty(tablePath))
+            {
+                tablePath = "pinyin.tsv";
+            }
+            if (!tablePath.Contains('\\'))
+            {
+                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Table", tablePath);
+            } 
+            var table = await CharacterTable.CreateTableAsync(tablePath);
+
+            Func<string, bool> method = go.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
+
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
-            var table = await CharacterTable.MakeTableAsync(@"C:\Users\Liu00\AppData\Roaming\Rime\pinyin_simp.dict.yaml", '\t');
-
-            Func<string, bool> method = GeneralOptions.Instance.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
-
-            var query = allCompletionItems.AsParallel().WithCancellation(token);
-
-            query = query.SelectMany(m => CreateCompletionItemWithConvertion(m, method, table));
+            var query = 
+                allCompletionItems.AsParallel()
+                                  .WithCancellation(token)
+                                  .SelectMany(m => CreateCompletionItemWithConvertion(m, method, table, go.DisllowMultipleSpellings));
 
             var pinyinCompletions = query.Where(static m => m is not null)
                                          .ToImmutableArray();
@@ -106,45 +118,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private CompletionItem TryCreatePinyinCompletionItem(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck)
-    {
-        var originInsertText = originCompletionItem.InsertText;
-
-        if (!shouldProcessCheck(originInsertText))
-        {
-            return null;
-        }
-
-        var pinyin = ChineseCharPinyinConverter.Convert(originInsertText);
-
-        if (string.Equals(originInsertText, pinyin, StringComparison.Ordinal))
-        {
-            return null;
-        }
-
-        var appendCompletionItem = new CompletionItem(displayText: $"{originCompletionItem.DisplayText} [{pinyin}]",
-                                                      source: this,
-                                                      icon: originCompletionItem.Icon,
-                                                      filters: s_chineseFilters,
-                                                      suffix: originCompletionItem.Suffix,
-                                                      insertText: originInsertText,
-                                                      sortText: pinyin,
-                                                      filterText: pinyin,
-                                                      automationText: originCompletionItem.AutomationText,
-                                                      attributeIcons: originCompletionItem.AttributeIcons,
-                                                      commitCharacters: originCompletionItem.CommitCharacters,
-                                                      applicableToSpan: originCompletionItem.ApplicableToSpan,
-                                                      isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
-                                                      isPreselected: originCompletionItem.IsPreselected);
-
-        appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
-
-        return appendCompletionItem;
-    }
-
-    ConditionalWeakTable<string, IEnumerable<string>> t = new();
-
-    private IEnumerable<CompletionItem> CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table)
+    private IEnumerable<CompletionItem> CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table, bool disallowMultipleSpellings)
     {
         var originInsertText = originCompletionItem.InsertText;
 
@@ -153,19 +127,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             return Enumerable.Empty<CompletionItem>();
         }
 
-        if (!t.TryGetValue(originInsertText, out IEnumerable<string> spells))
-        {
-            spells = Enumerable.Repeat(string.Empty, 1);
-            for (int k = 0; k < originInsertText.Length; k++)
-            {
-                var item = originInsertText[k];
-                spells =
-                    from i in spells
-                    from j in table.GetSpells(item.ToString())
-                    select i + j;
-                t.Add(originInsertText.Substring(0, k + 1), spells);
-            }
-        }
+        IEnumerable<string> spells = table.Convert(originInsertText, disallowMultipleSpellings);
 
         if (spells.Count() == 1 && string.Equals(originInsertText, spells.First(), StringComparison.Ordinal))
         {
