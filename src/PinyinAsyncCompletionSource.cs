@@ -71,14 +71,14 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             if (!tablePath.Contains('\\'))
             {
                 tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Table", tablePath);
-            } 
+            }
             var table = await CharacterTable.CreateTableAsync(tablePath);
 
             Func<string, bool> method = go.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
-            var query = 
+            var query =
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
                                   .Select(m => CreateCompletionItemWithConvertion(m, method, table, go.DisllowMultipleSpellings));
@@ -152,24 +152,24 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             }
         }
 
-            CompletionItem appendCompletionItem = new(
-                displayText: originCompletionItem.DisplayText,
-                source: this,
-                icon: originCompletionItem.Icon,
-                filters: s_chineseFilters,
-                suffix: $"{originCompletionItem.Suffix} {spell}",
-                insertText: originInsertText,
-                sortText: spell,
-                filterText: spell,
-                automationText: originCompletionItem.AutomationText,
-                attributeIcons: originCompletionItem.AttributeIcons,
-                commitCharacters: originCompletionItem.CommitCharacters,
-                applicableToSpan: originCompletionItem.ApplicableToSpan,
-                isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
-                isPreselected: originCompletionItem.IsPreselected);
+        CompletionItem appendCompletionItem = new(
+            displayText: originCompletionItem.DisplayText,
+            source: this,
+            icon: originCompletionItem.Icon,
+            filters: s_chineseFilters,
+            suffix: $"{originCompletionItem.Suffix} {spell}",
+            insertText: originInsertText,
+            sortText: spell,
+            filterText: spell,
+            automationText: originCompletionItem.AutomationText,
+            attributeIcons: originCompletionItem.AttributeIcons,
+            commitCharacters: originCompletionItem.CommitCharacters,
+            applicableToSpan: originCompletionItem.ApplicableToSpan,
+            isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
+            isPreselected: originCompletionItem.IsPreselected);
 
-            appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
-            return appendCompletionItem;
+        appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
+        return appendCompletionItem;
     }
 
 

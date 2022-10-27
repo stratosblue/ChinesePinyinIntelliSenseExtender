@@ -14,6 +14,7 @@ internal class CharacterTable
 {
     private const char separator = '\t';
     private static CharacterTable instance;
+    private static readonly SemaphoreSlim slim = new(1, 1);
 
     private readonly Dictionary<string, ImmutableArray<string>> table;
     private readonly ConcurrentDictionary<string, string> cache = new();
@@ -29,7 +30,6 @@ internal class CharacterTable
 
     public static async Task<CharacterTable> CreateTableAsync(string tablePath)
     {
-        SemaphoreSlim slim = new(1, 1);
         await slim.WaitAsync();
 
         if (instance != null)
@@ -59,6 +59,7 @@ internal class CharacterTable
                         return (r[0], r[1].CapitalizeLeadingCharacter());
                     }).GroupBy(i => i.Item1)
                     .ToDictionary(i => i.Key, i => i.Select(i => i.Item2).ToImmutableArray());
+
             sw.Stop();
             Debug.WriteLine($"字典 '{tablePath}' 读取完成, 用时 {sw.Elapsed}");
             return instance = new CharacterTable(tablePath, dict);
@@ -74,7 +75,7 @@ internal class CharacterTable
         }
     }
 
-    public IEnumerable<string> GetCharacterSpellings(string str)
+    public ImmutableArray<string> GetCharacterSpellings(string str)
     {
         if (table.TryGetValue(str, out var r)) return r;
         r = ImmutableArray.Create(str);
@@ -103,7 +104,7 @@ internal class CharacterTable
         {
             var item = value[k];
             var result = GetCharacterSpellings(item.ToString());
-            spellings += disallowMultipleSpellings || result.Count() == 1 ? result.First() : ("{" + string.Join("/", result) + "}");
+            spellings += disallowMultipleSpellings || result.Length == 1 ? result[0] : ("{" + string.Join("/", result) + "}");
         }
         cache.TryAdd(value, spellings);
 

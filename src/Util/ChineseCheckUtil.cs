@@ -69,7 +69,7 @@ internal static class ChineseCheckUtil
     internal static string CapitalizeLeadingCharacter(this string str)
     {
         if (string.IsNullOrEmpty(str)) return string.Empty;
-        else if ('a' <= str[0] && str[0] <= 'z')
+        else if (char.IsLower(str[0]))
         {
             return char.ToUpper(str[0]) + str.Substring(1);
         }
