@@ -36,6 +36,7 @@ internal class CharacterTable
         {
             if (instance.TablePath == tablePath)
             {
+                slim.Release();
                 return instance;
             }
         }
