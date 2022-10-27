@@ -81,7 +81,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             var query = 
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .SelectMany(m => CreateCompletionItemWithConvertion(m, method, table, go.DisllowMultipleSpellings));
+                                  .Select(m => CreateCompletionItemWithConvertion(m, method, table, go.DisllowMultipleSpellings));
 
             var pinyinCompletions = query.Where(static m => m is not null)
                                          .ToImmutableArray();
@@ -118,20 +118,20 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private IEnumerable<CompletionItem> CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table, bool disallowMultipleSpellings)
+    private CompletionItem CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table, bool disallowMultipleSpellings)
     {
         var originInsertText = originCompletionItem.InsertText;
 
         if (!shouldProcessCheck(originInsertText))
         {
-            return Enumerable.Empty<CompletionItem>();
+            return null;
         }
 
-        IEnumerable<string> spells = table.Convert(originInsertText, disallowMultipleSpellings);
+        string spell = table.Convert(originInsertText, disallowMultipleSpellings);
 
-        if (spells.Count() == 1 && string.Equals(originInsertText, spells.First(), StringComparison.Ordinal))
+        if (string.Equals(originInsertText, spell, StringComparison.Ordinal))
         {
-            return Enumerable.Empty<CompletionItem>();
+            return null;
         }
 
         // 获取 F# 中特殊标识符（包含空格等特殊字符）的实际写法。F# 并没有将真正要写到代码里的内容存到 CompletionItem.InsertText 里，而是放在了
@@ -152,14 +152,12 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             }
         }
 
-        return spells.AsParallel().Select(spell =>
-        {
             CompletionItem appendCompletionItem = new(
-                displayText: $"{originCompletionItem.DisplayText} [{spell}]",
+                displayText: originCompletionItem.DisplayText,
                 source: this,
                 icon: originCompletionItem.Icon,
                 filters: s_chineseFilters,
-                suffix: originCompletionItem.Suffix,
+                suffix: $"{originCompletionItem.Suffix} {spell}",
                 insertText: originInsertText,
                 sortText: spell,
                 filterText: spell,
@@ -172,7 +170,6 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
             return appendCompletionItem;
-        });
     }
 
 

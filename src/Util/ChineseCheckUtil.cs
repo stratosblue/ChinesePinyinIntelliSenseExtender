@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ChinesePinyinIntelliSenseExtender;
@@ -7,7 +8,7 @@ internal static class ChineseCheckUtil
 {
     #region Private 字段
 
-    private static readonly ConditionalWeakTable<string, ObjectBoolean> s_chineseCheckCache = new();
+    private static readonly ConcurrentDictionary<string, bool> s_chineseCheckCache = new();
 
     #endregion Private 字段
 
@@ -23,7 +24,7 @@ internal static class ChineseCheckUtil
 
         Debug.WriteLine($"No chineseCheck cache for {value}.");
 
-        isContainsChinese = ObjectBoolean.False;
+        isContainsChinese = false;
 
         if (value.Length < 255) //不处理过长的名称
         {
@@ -31,7 +32,7 @@ internal static class ChineseCheckUtil
             {
                 if (IsChinese(item))
                 {
-                    isContainsChinese = ObjectBoolean.True;
+                    isContainsChinese = true;
                     break;
                 }
             }
@@ -41,7 +42,7 @@ internal static class ChineseCheckUtil
             Debug.WriteLine($"ChineseCheck value \"{value}\" is too long. Return false.");
         }
 
-        s_chineseCheckCache.Add(value, isContainsChinese);
+        s_chineseCheckCache.TryAdd(value, isContainsChinese);
 
         return isContainsChinese;
     }

@@ -14,8 +14,8 @@ internal class CharacterTable
     private const char separator = '\t';
     private static CharacterTable instance;
 
-    private Dictionary<string, IEnumerable<string>> table;
-    private ConcurrentDictionary<string, IEnumerable<string>> cache = new();
+    private readonly Dictionary<string, IEnumerable<string>> table;
+    private readonly ConcurrentDictionary<string, string> cache = new();
     private bool lastDisallowMultipleSpellings;
 
     public string TablePath { get; }
@@ -83,7 +83,7 @@ internal class CharacterTable
         return r;
     }
 
-    public IEnumerable<string> Convert(string value, bool disallowMultipleSpellings)
+    public string Convert(string value, bool disallowMultipleSpellings)
     {
         if (disallowMultipleSpellings != lastDisallowMultipleSpellings)
         {
@@ -99,18 +99,14 @@ internal class CharacterTable
 
         Debug.WriteLine($"No spelling caches for {value}.");
 
-        spellings = Enumerable.Repeat(string.Empty, 1);
+        spellings = string.Empty;
         for (int k = 0; k < value.Length; k++)
         {
             var item = value[k];
             var result = GetCharacterSpellings(item.ToString());
-            spellings = disallowMultipleSpellings ?
-                Enumerable.Repeat(spellings.First() + result.First(), 1)
-                : from i in spellings
-                  from j in result
-                  select i + j;
-            cache.AddOrUpdate(value.Substring(0, k + 1), spellings, (_, item) => item);
+            spellings += disallowMultipleSpellings || result.Count() == 1 ? result.First() : ("{" + string.Join("/", result) + "}");
         }
+        cache.TryAdd(value, spellings);
 
         return spellings;
     }
