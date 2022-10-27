@@ -43,6 +43,15 @@ internal class CharacterTable
         Debug.WriteLine($"字表 '{tablePath}' 不存在，将创建表");
         try
         {
+            if (string.IsNullOrEmpty(tablePath))
+            {
+                tablePath = "pinyin.tsv";
+            }
+            if (!tablePath.Contains('\\'))
+            {
+                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Table", tablePath);
+            }
+
             using var reader = File.OpenText(tablePath);
             Debug.WriteLine($"开始读取字典 '{tablePath}'");
             Stopwatch sw = Stopwatch.StartNew();

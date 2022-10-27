@@ -63,16 +63,8 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             token.ThrowIfCancellationRequested();
 
             var go = GeneralOptions.Instance;
-            var tablePath = go.CustomDictionaryPath;
-            if (string.IsNullOrEmpty(tablePath))
-            {
-                tablePath = "pinyin.tsv";
-            }
-            if (!tablePath.Contains('\\'))
-            {
-                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Table", tablePath);
-            }
-            var table = await CharacterTable.CreateTableAsync(tablePath);
+
+            var table = await CharacterTable.CreateTableAsync(go.CustomDictionaryPath);
 
             Func<string, bool> method = go.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
 

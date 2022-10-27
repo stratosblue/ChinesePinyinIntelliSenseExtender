@@ -2,6 +2,7 @@
 using System.Runtime.InteropServices;
 using System.Threading;
 using ChinesePinyinIntelliSenseExtender.Options;
+using ChinesePinyinIntelliSenseExtender.Util;
 using Microsoft.VisualStudio.Shell;
 using Task = System.Threading.Tasks.Task;
 
@@ -19,9 +20,11 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
 
     #region Package Members
 
-    protected override Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
+    protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
-        return base.InitializeAsync(cancellationToken, progress);
+        await base.InitializeAsync(cancellationToken, progress);
+        var go = await GeneralOptions.GetLiveInstanceAsync();
+        _ = await CharacterTable.CreateTableAsync(go.CustomDictionaryPath);
     }
 
     #endregion Package Members
