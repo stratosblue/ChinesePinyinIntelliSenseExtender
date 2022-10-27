@@ -61,7 +61,7 @@ internal class CharacterTable
                 lines
                     .Split('\n')
                     .AsParallel()
-                    .Where(i => i.Length > 3 && i[1] == separator)
+                    .Where(i => i.Length >= 3 && i[1] == separator)
                     .Select(i =>
                     {
                         var r = i.Split(separator);
