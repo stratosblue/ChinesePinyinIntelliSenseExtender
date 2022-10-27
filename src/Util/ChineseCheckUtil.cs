@@ -8,7 +8,7 @@ internal static class ChineseCheckUtil
 {
     #region Private 字段
 
-    private static readonly ConcurrentDictionary<string, bool> s_chineseCheckCache = new();
+    private static readonly ConcurrentDictionary<string, ObjectBoolean> s_chineseCheckCache = new();
 
     #endregion Private 字段
 

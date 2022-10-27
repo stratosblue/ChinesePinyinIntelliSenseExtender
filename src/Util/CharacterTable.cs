@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -14,13 +15,13 @@ internal class CharacterTable
     private const char separator = '\t';
     private static CharacterTable instance;
 
-    private readonly Dictionary<string, IEnumerable<string>> table;
+    private readonly Dictionary<string, ImmutableArray<string>> table;
     private readonly ConcurrentDictionary<string, string> cache = new();
     private bool lastDisallowMultipleSpellings;
 
     public string TablePath { get; }
 
-    private CharacterTable(string tablePath, Dictionary<string, IEnumerable<string>> table)
+    private CharacterTable(string tablePath, Dictionary<string, ImmutableArray<string>> table)
     {
         this.TablePath = tablePath;
         this.table = table;
@@ -40,7 +41,6 @@ internal class CharacterTable
         }
 
         Debug.WriteLine($"字表 '{tablePath}' 不存在，将创建表");
-        Dictionary<string, IEnumerable<string>> dict;
         try
         {
             using var reader = File.OpenText(tablePath);
@@ -48,7 +48,7 @@ internal class CharacterTable
             Stopwatch sw = Stopwatch.StartNew();
             var lines = await reader.ReadToEndAsync();
 
-            dict =
+            var dict =
                 lines
                     .Split('\n')
                     .AsParallel()
@@ -58,9 +58,10 @@ internal class CharacterTable
                         var r = i.Split(separator);
                         return (r[0], r[1].CapitalizeLeadingCharacter());
                     }).GroupBy(i => i.Item1)
-                    .ToDictionary(i => i.Key, i => i.Select(i => i.Item2));
+                    .ToDictionary(i => i.Key, i => i.Select(i => i.Item2).ToImmutableArray());
             sw.Stop();
             Debug.WriteLine($"字典 '{tablePath}' 读取完成, 用时 {sw.Elapsed}");
+            return instance = new CharacterTable(tablePath, dict);
         }
         catch (Exception e)
         {
@@ -71,14 +72,12 @@ internal class CharacterTable
         {
             slim.Release();
         }
-
-        return instance = new CharacterTable(tablePath, dict);
     }
 
     public IEnumerable<string> GetCharacterSpellings(string str)
     {
         if (table.TryGetValue(str, out var r)) return r;
-        r = Enumerable.Repeat(str, 1);
+        r = ImmutableArray.Create(str);
         table[str] = r;
         return r;
     }
