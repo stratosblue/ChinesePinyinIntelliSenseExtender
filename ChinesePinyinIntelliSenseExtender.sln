@@ -10,9 +10,14 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{EA45AAAC-31DF-4949-9807-4BFB048AB873}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		init-gitmodules.ps1 = init-gitmodules.ps1
 		LICENSE = LICENSE
 		README.md = README.md
-		assets\tables\make_word_table_from_rime_dict.fsx = assets\tables\make_word_table_from_rime_dict.fsx
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "script", "script", "{60BF4FD0-DB29-4BF3-9A10-2D7C753647FD}"
+	ProjectSection(SolutionItems) = preProject
+		script\make_word_table_from_rime_dict.fsx = script\make_word_table_from_rime_dict.fsx
 	EndProjectSection
 EndProject
 Global
@@ -37,6 +42,7 @@ Global
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{6D556409-F4ED-4169-A08D-ABB6018EA5DE} = {919551FE-C50D-43A6-BD1A-9E407BE07A72}
+		{60BF4FD0-DB29-4BF3-9A10-2D7C753647FD} = {EA45AAAC-31DF-4949-9807-4BFB048AB873}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {EEBA7CF4-B1D5-4DD3-BD1F-3BE9DCB164D3}

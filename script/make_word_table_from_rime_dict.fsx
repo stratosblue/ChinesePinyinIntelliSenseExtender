@@ -1,8 +1,14 @@
+open System
 open System.IO
+
+Environment.CurrentDirectory <- __SOURCE_DIRECTORY__
 
 let separator = '\t'
 
 let make (tablePath, outputName, (folder: string list -> _ -> _)) =
+    if File.Exists(outputName) then 
+        printfn "skip %s -> %s" tablePath outputName
+    else
     printfn "%s -> %s" tablePath outputName
     use f = File.OpenText(tablePath)
     f.ReadToEnd().Split("\n")
@@ -20,8 +26,8 @@ let make (tablePath, outputName, (folder: string list -> _ -> _)) =
         ff.Close()
 
 List.iter make [
-    "pinyin_simp.dict.yaml", "pinyin.tsv", fun state (_, item) -> item :: state
-    "wubi86_jidian.dict.yaml", "wubi86.tsv", fun state (_, item) -> 
+    "../third/rime-pinyin-simp/pinyin_simp.dict.yaml", "../src/Assets/Tables/pinyin.tsv", fun state (_, item) -> item :: state
+    "../third/rime-wubi86-jidian/wubi86_jidian.dict.yaml", "../src/Assets/Tables/wubi86.tsv", fun state (_, item) -> 
         match state |> List.tryFindIndex (fun i -> i.[0] = item.[0]) with
         | Some i ->
             let x = state[i]

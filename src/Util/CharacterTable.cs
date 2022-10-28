@@ -50,7 +50,7 @@ internal class CharacterTable
             }
             if (!tablePath.Contains('\\'))
             {
-                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Table", tablePath);
+                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Tables", tablePath);
             }
 
             using var reader = File.OpenText(tablePath);

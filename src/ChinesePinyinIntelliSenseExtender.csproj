@@ -63,8 +63,7 @@
     <Compile Include="ChinesePinyinIntelliSenseExtenderPackage.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="..\assets\tables\*.tsv">
-      <Link>Table\%(RecursiveDir)/%(FileName)%(Extension)</Link>
+    <Content Include="Assets\Tables\*.tsv">
       <IncludeInVSIX>true</IncludeInVSIX>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
@@ -103,4 +102,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(VSToolsPath)\VSSDK\Microsoft.VsSDK.targets" Condition="'$(VSToolsPath)' != ''" />
+  <PropertyGroup>
+    <PreBuildEvent>dotnet fsi $(SolutionDir)script\make_word_table_from_rime_dict.fsx</PreBuildEvent>
+  </PropertyGroup>
 </Project>

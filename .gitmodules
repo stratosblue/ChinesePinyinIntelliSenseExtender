@@ -1,0 +1,6 @@
+[submodule "third/rime-pinyin-simp"]
+	path = third/rime-pinyin-simp
+	url = https://github.com/rime/rime-pinyin-simp
+[submodule "third/rime-wubi86-jidian"]
+	path = third/rime-wubi86-jidian
+	url = https://github.com/KyleBing/rime-wubi86-jidian
