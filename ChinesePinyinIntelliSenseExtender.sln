@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		README.md = README.md
+		assets\tables\make_word_table_from_rime_dict.fsx = assets\tables\make_word_table_from_rime_dict.fsx
 	EndProjectSection
 EndProject
 Global

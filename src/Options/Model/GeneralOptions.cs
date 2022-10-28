@@ -41,4 +41,16 @@ internal class GeneralOptions : Options<GeneralOptions>
         _excludeExtensions = value ?? string.Empty;
         return _excludeExtensionArray;
     }
+
+    [Category("基础")]
+    [DisplayName("对有多种拼写的字仅取第一种写法")]
+    [Description("对于在字典里有多种拼写方式的字，只取第一种写法。")]
+    [DefaultValue(false)]
+    public bool DisllowMultipleSpellings { get; set; }
+
+    [Category("基础")]
+    [DisplayName("字典路径")]
+    [Description("字典每一行的格式：\"汉字 拼写\"（用制表符分隔开）。扩展自带了拼音（pinyin.tsv）和五笔86版（wubi86.tsv）的字典，缺省则使用自带的拼音字典。")]
+    [DefaultValue("")]
+    public string CustomDictionaryPath { get; set; }
 }
