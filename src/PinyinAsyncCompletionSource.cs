@@ -73,7 +73,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             var query =
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .Select(m => CreateCompletionItemWithConvertion(m, method, table, go.DisllowMultipleSpellings));
+                                  .Select(m => CreateCompletionItemWithConvertion(m, method, table, go.DisallowMultipleSpellings));
 
             var pinyinCompletions = query.Where(static m => m is not null)
                                          .ToImmutableArray();

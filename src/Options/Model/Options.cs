@@ -1,16 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization.Formatters.Binary;
+using System.Text;
 using System.Threading.Tasks;
+
 using Microsoft;
 using Microsoft.VisualStudio.Settings;
 using Microsoft.VisualStudio.Shell;
 using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Shell.Settings;
 using Microsoft.VisualStudio.Threading;
+
+using Newtonsoft.Json;
+
 using Task = System.Threading.Tasks.Task;
 
 namespace ChinesePinyinIntelliSenseExtender.Options;
@@ -153,11 +156,8 @@ internal abstract class Options<T> where T : Options<T>, new()
     /// </summary>
     protected virtual string SerializeValue(object value)
     {
-        using var stream = new MemoryStream();
-        var formatter = new BinaryFormatter();
-        formatter.Serialize(stream, value);
-        stream.Flush();
-        return Convert.ToBase64String(stream.ToArray());
+        var json = JsonConvert.SerializeObject(value);
+        return Convert.ToBase64String(Encoding.UTF8.GetBytes(json));
     }
 
     /// <summary>
@@ -165,11 +165,8 @@ internal abstract class Options<T> where T : Options<T>, new()
     /// </summary>
     protected virtual object DeserializeValue(string value, Type type)
     {
-        byte[] b = Convert.FromBase64String(value);
-
-        using var stream = new MemoryStream(b);
-        var formatter = new BinaryFormatter();
-        return formatter.Deserialize(stream);
+        var json = Encoding.UTF8.GetString(Convert.FromBase64String(value));
+        return JsonConvert.DeserializeObject(json, type);
     }
 
     private static async Task<ShellSettingsManager> GetSettingsManagerAsync()

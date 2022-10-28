@@ -46,7 +46,7 @@ internal class GeneralOptions : Options<GeneralOptions>
     [DisplayName("对有多种拼写的字仅取第一种写法")]
     [Description("对于在字典里有多种拼写方式的字，只取第一种写法。")]
     [DefaultValue(false)]
-    public bool DisllowMultipleSpellings { get; set; }
+    public bool DisallowMultipleSpellings { get; set; }
 
     [Category("基础")]
     [DisplayName("字典路径")]
