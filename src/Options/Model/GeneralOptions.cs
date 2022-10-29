@@ -68,6 +68,22 @@ internal class GeneralOptions : Options<GeneralOptions>
 
     #endregion 字典
 
+    #region 展示
+
+    [Category("展示")]
+    [DisplayName("Suffix的展示格式")]
+    [Description("参数 {0} 为原 Suffix，参数 {1} 为拼写文本")]
+    [DefaultValue(null)]
+    public string? DisplaySuffixFormat { get; set; }
+
+    [Category("展示")]
+    [DisplayName("DisplayText的展示格式")]
+    [Description("参数 {0} 为原 DisplayText ，参数 {1} 为拼写文本")]
+    [DefaultValue("{0} {1}")]
+    public string? DisplayTextFormat { get; set; } = "{0} {1}";
+
+    #endregion 展示
+
     #region 拓展
 
     [Category("拓展")]

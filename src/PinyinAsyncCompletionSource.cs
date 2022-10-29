@@ -16,6 +16,7 @@ using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
+using Microsoft.VisualStudio.Utilities;
 
 namespace ChinesePinyinIntelliSenseExtender;
 
@@ -150,11 +151,11 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         }
 
         CompletionItem appendCompletionItem = new(
-            displayText: originCompletionItem.DisplayText,
+            displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spellings!),
             source: this,
             icon: originCompletionItem.Icon,
             filters: s_chineseFilters,
-            suffix: $"{originCompletionItem.Suffix} {spellings}",
+            suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spellings!),
             insertText: originInsertText,
             sortText: spellings!,
             filterText: spellings!,
@@ -167,6 +168,23 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
         appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
         return appendCompletionItem;
+
+        static string Format(string? format, string origin, string spellings)
+        {
+            if (string.IsNullOrEmpty(format))
+            {
+                return origin;
+            }
+            var builder = PooledStringBuilder.GetInstance();
+            try
+            {
+                return builder.Builder.AppendFormat(format, origin, spellings).ToString();
+            }
+            finally
+            {
+                builder.Free();
+            }
+        }
     }
 
     #endregion impl
