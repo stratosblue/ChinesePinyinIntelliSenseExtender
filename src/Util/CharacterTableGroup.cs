@@ -64,11 +64,7 @@ internal class CharacterTableGroup
             pooledStringBuilder.Free();
         }
 
-        try
-        {
-            cache.Add(value, spellings);
-        }
-        catch { }
+        cache.TryAdd(value, spellings);
 
         return spellings;
 

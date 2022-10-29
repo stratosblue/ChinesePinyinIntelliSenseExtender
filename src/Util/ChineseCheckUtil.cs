@@ -23,7 +23,7 @@ internal static class ChineseCheckUtil
 
         //Debug.WriteLine($"No chineseCheck cache for {value}.");
 
-        isContainsChinese = false;
+        isContainsChinese = ObjectBoolean.False;
 
         if (value.Length < 255) //不处理过长的名称
         {
@@ -31,7 +31,7 @@ internal static class ChineseCheckUtil
             {
                 if (IsChinese(item))
                 {
-                    isContainsChinese = true;
+                    isContainsChinese = ObjectBoolean.True;
                     break;
                 }
             }
@@ -41,11 +41,7 @@ internal static class ChineseCheckUtil
             Debug.WriteLine($"ChineseCheck value \"{value}\" is too long. Return false.");
         }
 
-        try
-        {
-            s_chineseCheckCache.Add(value, isContainsChinese);
-        }
-        catch { }
+        s_chineseCheckCache.TryAdd(value, isContainsChinese);
 
         return isContainsChinese;
     }

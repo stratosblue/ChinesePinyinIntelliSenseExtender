@@ -131,40 +131,27 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             return null;
         }
 
-        // 获取 F# 中特殊标识符（包含空格等特殊字符）的实际写法。F# 并没有将真正要写到代码里的内容存到 CompletionItem.InsertText 里，而是放在了
-        // CompletionItem.Properties["RoslynCompletionItemData"].Value.Properties["NameInCode"] 中，因此需要用反射来获取。
-        // 下面是 vs F# 扩展插入提示项的方法：
-        // https://github.com/dotnet/fsharp/blob/main/vsintegration/src/FSharp.Editor/Completion/CompletionProvider.fs#L250
         if (_options.EnableFSharpSupport
-            && originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data))
+            && originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data)
+            && TryGetRoslynItemNameInCode(data, out var nameInCode))
         {
-            var dataType = data.GetType();
-            if (dataType.FullName == "Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncCompletion.CompletionItemData")
-            {
-                var RoslynItem = dataType.GetProperty("RoslynItem").GetMethod.Invoke(data, Array.Empty<object>());
-                var properties = (ImmutableDictionary<string, string>)RoslynItem.GetType().GetProperty("Properties").GetMethod.Invoke(RoslynItem, Array.Empty<object>());
-                if (properties.TryGetValue("NameInCode", out var code))
-                {
-                    originInsertText = code;
-                }
-            }
+            originInsertText = nameInCode!;
         }
 
-        CompletionItem appendCompletionItem = new(
-            displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spellings!),
-            source: this,
-            icon: originCompletionItem.Icon,
-            filters: s_chineseFilters,
-            suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spellings!),
-            insertText: originInsertText,
-            sortText: spellings!,
-            filterText: spellings!,
-            automationText: originCompletionItem.AutomationText,
-            attributeIcons: originCompletionItem.AttributeIcons,
-            commitCharacters: originCompletionItem.CommitCharacters,
-            applicableToSpan: originCompletionItem.ApplicableToSpan,
-            isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
-            isPreselected: originCompletionItem.IsPreselected);
+        var appendCompletionItem = new CompletionItem(displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spellings!),
+                                                      source: this,
+                                                      icon: originCompletionItem.Icon,
+                                                      filters: s_chineseFilters,
+                                                      suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spellings!),
+                                                      insertText: originInsertText,
+                                                      sortText: spellings!,
+                                                      filterText: spellings!,
+                                                      automationText: originCompletionItem.AutomationText,
+                                                      attributeIcons: originCompletionItem.AttributeIcons,
+                                                      commitCharacters: originCompletionItem.CommitCharacters,
+                                                      applicableToSpan: originCompletionItem.ApplicableToSpan,
+                                                      isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
+                                                      isPreselected: originCompletionItem.IsPreselected);
 
         appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
         return appendCompletionItem;
@@ -186,6 +173,30 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             }
         }
     }
+
+    #region NameInCode
+
+    private static bool TryGetRoslynItemNameInCode(object data, out string? nameInCode)
+    {
+        // 获取 F# 中特殊标识符（包含空格等特殊字符）的实际写法。F# 并没有将真正要写到代码里的内容存到 CompletionItem.InsertText 里，而是放在了
+        // CompletionItem.Properties["RoslynCompletionItemData"].Value.Properties["NameInCode"] 中，因此需要用反射来获取。
+        // 下面是 vs F# 扩展插入提示项的方法：
+        // https://github.com/dotnet/fsharp/blob/main/vsintegration/src/FSharp.Editor/Completion/CompletionProvider.fs#L250
+
+        //TODO 优化
+        var dataType = data.GetType();
+        if (string.Equals("Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncCompletion.CompletionItemData", dataType.FullName, StringComparison.Ordinal))
+        {
+            var roslynItem = dataType.GetProperty("RoslynItem").GetMethod.Invoke(data, Array.Empty<object>());
+            var properties = (ImmutableDictionary<string, string>)roslynItem.GetType().GetProperty("Properties").GetMethod.Invoke(roslynItem, Array.Empty<object>());
+
+            return properties.TryGetValue("NameInCode", out nameInCode);
+        }
+        nameInCode = null;
+        return false;
+    }
+
+    #endregion NameInCode
 
     #endregion impl
 }

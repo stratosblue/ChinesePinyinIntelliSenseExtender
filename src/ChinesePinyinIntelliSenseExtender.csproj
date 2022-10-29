@@ -62,6 +62,7 @@
     <Compile Include="Util\ChineseCheckUtil.cs" />
     <Compile Include="ObjectBoolean.cs" />
     <Compile Include="ChinesePinyinIntelliSenseExtenderPackage.cs" />
+    <Compile Include="Util\ConditionalWeakTableExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Assets\Tables\*.tsv">

@@ -85,7 +85,7 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
                                                       ? EmptyAsyncCompletionSource.Instance
                                                       : new PinyinAsyncCompletionSource(otherAsyncCompletionSources, GeneralOptions.Instance);
 
-            _completionSourceCache.Add(textView, completionSource);
+            _completionSourceCache.TryAdd(textView, completionSource);
 
             return completionSource;
         }
