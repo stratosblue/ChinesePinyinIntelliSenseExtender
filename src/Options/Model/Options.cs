@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft;
@@ -47,7 +48,7 @@ internal abstract class Options<T> where T : Options<T>, new()
             ThreadHelper.ThrowIfNotOnUIThread();
 
 #pragma warning disable VSTHRD102 // Implement internal logic asynchronously
-            return ThreadHelper.JoinableTaskFactory.Run(GetLiveInstanceAsync);
+            return ThreadHelper.JoinableTaskFactory.Run(() => GetLiveInstanceAsync(default));
 #pragma warning restore VSTHRD102 // Implement internal logic asynchronously
         }
     }
@@ -55,9 +56,9 @@ internal abstract class Options<T> where T : Options<T>, new()
     /// <summary>
     /// Get the singleton instance of the options. Thread safe.
     /// </summary>
-    public static Task<T> GetLiveInstanceAsync()
+    public static Task<T> GetLiveInstanceAsync(CancellationToken cancellationToken = default)
     {
-        return s_liveModel.GetValueAsync();
+        return s_liveModel.GetValueAsync(cancellationToken);
     }
 
     /// <summary>

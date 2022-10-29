@@ -28,9 +28,9 @@ internal class CharacterTable
         this.table = table;
     }
 
-    public static async Task<CharacterTable> CreateTableAsync(string tablePath)
+    public static async Task<CharacterTable> CreateTableAsync(string tablePath, CancellationToken cancellationToken = default)
     {
-        await slim.WaitAsync();
+        await slim.WaitAsync(cancellationToken);
 
         if (instance != null)
         {
@@ -58,10 +58,13 @@ internal class CharacterTable
             Stopwatch sw = Stopwatch.StartNew();
             var lines = await reader.ReadToEndAsync();
 
+            cancellationToken.ThrowIfCancellationRequested();
+
             var dict =
                 lines
-                    .Split('\n')
+                    .Split(new[] { '\r', '\n' })
                     .AsParallel()
+                    .WithCancellation(cancellationToken)
                     .Where(i => i.Length >= 3 && i[1] == separator)
                     .Select(i =>
                     {
