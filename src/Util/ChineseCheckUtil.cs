@@ -1,5 +1,4 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace ChinesePinyinIntelliSenseExtender;
@@ -8,7 +7,7 @@ internal static class ChineseCheckUtil
 {
     #region Private 字段
 
-    private static readonly ConcurrentDictionary<string, ObjectBoolean> s_chineseCheckCache = new();
+    private static readonly ConditionalWeakTable<string, ObjectBoolean> s_chineseCheckCache = new();
 
     #endregion Private 字段
 
@@ -18,11 +17,11 @@ internal static class ChineseCheckUtil
     {
         if (s_chineseCheckCache.TryGetValue(value, out var isContainsChinese))
         {
-            Debug.WriteLine($"ChineseCheck cache hit by {value}.");
+            //Debug.WriteLine($"ChineseCheck cache hit by {value}.");
             return isContainsChinese;
         }
 
-        Debug.WriteLine($"No chineseCheck cache for {value}.");
+        //Debug.WriteLine($"No chineseCheck cache for {value}.");
 
         isContainsChinese = false;
 
@@ -42,7 +41,11 @@ internal static class ChineseCheckUtil
             Debug.WriteLine($"ChineseCheck value \"{value}\" is too long. Return false.");
         }
 
-        s_chineseCheckCache.TryAdd(value, isContainsChinese);
+        try
+        {
+            s_chineseCheckCache.Add(value, isContainsChinese);
+        }
+        catch { }
 
         return isContainsChinese;
     }
@@ -63,8 +66,7 @@ internal static class ChineseCheckUtil
 
     #endregion Public 方法
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fd5;
+    #region Internal 方法
 
     internal static string CapitalizeLeadingCharacter(this string str)
     {
@@ -75,4 +77,13 @@ internal static class ChineseCheckUtil
         }
         else return str;
     }
+
+    #endregion Internal 方法
+
+    #region Private 方法
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fd5;
+
+    #endregion Private 方法
 }

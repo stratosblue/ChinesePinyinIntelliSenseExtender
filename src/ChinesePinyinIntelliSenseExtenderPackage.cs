@@ -35,8 +35,10 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
     protected override async Task InitializeAsync(CancellationToken cancellationToken, IProgress<ServiceProgressData> progress)
     {
         await base.InitializeAsync(cancellationToken, progress);
+
         var options = await GeneralOptions.GetLiveInstanceAsync(cancellationToken);
-        await CharacterTable.CreateTableAsync(options.CustomDictionaryPath, cancellationToken);
+
+        _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
     }
 
     #endregion Package Members

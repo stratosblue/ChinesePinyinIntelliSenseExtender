@@ -1,14 +1,16 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
+
 using Microsoft.VisualStudio.Core.Imaging;
 using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
@@ -30,31 +32,37 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
     /// </summary>
     private static readonly AsyncLocal<bool> s_getCompletionContextRecursionTag = new();
 
+    private readonly GeneralOptions _options;
     private readonly IEnumerable<IAsyncCompletionSource> _otherAsyncCompletionSources;
+    private CharacterTableGroup? _characterTableGroup;
 
     #endregion Private 字段
 
     #region Public 构造函数
 
-    public PinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources)
+    public PinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
     {
-        _otherAsyncCompletionSources = otherAsyncCompletionSources;
+        _otherAsyncCompletionSources = otherAsyncCompletionSources ?? throw new ArgumentNullException(nameof(otherAsyncCompletionSources));
+        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     #endregion Public 构造函数
 
     #region Public 方法
 
-    public async Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
+    public async Task<CompletionContext?> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
         if (s_getCompletionContextRecursionTag.Value
-            || !GeneralOptions.Instance.Enable)
+            || !_options.Enable)
         {
             return null;
         }
+
         try
         {
             s_getCompletionContextRecursionTag.Value = true;
+
+            _characterTableGroup ??= await CharacterTableGroupProvider.GetAsync();
 
             var tasks = _otherAsyncCompletionSources.Select(m => m.GetCompletionContextAsync(session, trigger, triggerLocation, applicableToSpan, token)).ToArray();
 
@@ -62,25 +70,21 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            var go = GeneralOptions.Instance;
-
-            var table = await CharacterTable.CreateTableAsync(go.CustomDictionaryPath);
-
-            Func<string, bool> method = go.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
+            Func<string, bool> shouldProcessCheckDelegate = _options.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
             var query =
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .Select(m => CreateCompletionItemWithConvertion(m, method, table, go.DisallowMultipleSpellings));
+                                  .Select(m => CreateCompletionItemWithConvertion(m, shouldProcessCheckDelegate));
 
             var pinyinCompletions = query.Where(static m => m is not null)
                                          .ToImmutableArray();
 
             return pinyinCompletions.Length == 0
                    ? null
-                   : new CompletionContext(pinyinCompletions);
+                   : new CompletionContext(pinyinCompletions!);
         }
         finally
         {
@@ -110,7 +114,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private CompletionItem CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CharacterTable table, bool disallowMultipleSpellings)
+    private CompletionItem? CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck)
     {
         var originInsertText = originCompletionItem.InsertText;
 
@@ -119,9 +123,9 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             return null;
         }
 
-        string spell = table.Convert(originInsertText, disallowMultipleSpellings);
+        var spellings = _characterTableGroup!.Convert(originInsertText, _options.EnableMultipleSpellings);
 
-        if (string.Equals(originInsertText, spell, StringComparison.Ordinal))
+        if (string.IsNullOrEmpty(spellings))
         {
             return null;
         }
@@ -130,7 +134,8 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         // CompletionItem.Properties["RoslynCompletionItemData"].Value.Properties["NameInCode"] 中，因此需要用反射来获取。
         // 下面是 vs F# 扩展插入提示项的方法：
         // https://github.com/dotnet/fsharp/blob/main/vsintegration/src/FSharp.Editor/Completion/CompletionProvider.fs#L250
-        if (originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data))
+        if (_options.EnableFSharpSupport
+            && originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data))
         {
             var dataType = data.GetType();
             if (dataType.FullName == "Microsoft.CodeAnalysis.Editor.Implementation.IntelliSense.AsyncCompletion.CompletionItemData")
@@ -149,10 +154,10 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             source: this,
             icon: originCompletionItem.Icon,
             filters: s_chineseFilters,
-            suffix: $"{originCompletionItem.Suffix} {spell}",
+            suffix: $"{originCompletionItem.Suffix} {spellings}",
             insertText: originInsertText,
-            sortText: spell,
-            filterText: spell,
+            sortText: spellings!,
+            filterText: spellings!,
             automationText: originCompletionItem.AutomationText,
             attributeIcons: originCompletionItem.AttributeIcons,
             commitCharacters: originCompletionItem.CommitCharacters,
@@ -163,7 +168,6 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
         return appendCompletionItem;
     }
-
 
     #endregion impl
 }

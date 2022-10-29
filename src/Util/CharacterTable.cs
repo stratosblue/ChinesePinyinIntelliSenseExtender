@@ -1,126 +1,55 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿#nullable enable
+
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;
 
 internal class CharacterTable
 {
-    private const char separator = '\t';
-    private static CharacterTable instance;
-    private static readonly SemaphoreSlim slim = new(1, 1);
+    #region Private 字段
 
-    private readonly Dictionary<string, ImmutableArray<string>> table;
-    private readonly ConcurrentDictionary<string, string> cache = new();
-    private bool lastDisallowMultipleSpellings;
+    private readonly Dictionary<char, string> _singleSpellingTable;
+    private readonly Dictionary<char, string> _spellingTable;
 
-    public string TablePath { get; }
+    #endregion Private 字段
 
-    private CharacterTable(string tablePath, Dictionary<string, ImmutableArray<string>> table)
+    #region Internal 构造函数
+
+    internal CharacterTable(Dictionary<char, string[]> table)
     {
-        this.TablePath = tablePath;
-        this.table = table;
+        var spellingTable = new Dictionary<char, string>(table.Count);
+        foreach (var item in table)
+        {
+            var value = item.Value;
+            spellingTable.Add(item.Key, value.Length == 1 ? value[0] : $"{{{string.Join("/", value)}}}");
+        }
+        _spellingTable = spellingTable;
+        _singleSpellingTable = table.ToDictionary(m => m.Key, m => m.Value[0]);
     }
 
-    public static async Task<CharacterTable> CreateTableAsync(string tablePath, CancellationToken cancellationToken = default)
+    #endregion Internal 构造函数
+
+    #region Public 方法
+
+    public string? Query(char value)
     {
-        await slim.WaitAsync(cancellationToken);
-
-        if (instance != null)
+        if (_spellingTable.TryGetValue(value, out var spelling))
         {
-            if (instance.TablePath == tablePath)
-            {
-                slim.Release();
-                return instance;
-            }
+            return spelling;
         }
-
-        Debug.WriteLine($"字表 '{tablePath}' 不存在，将创建表");
-        try
-        {
-            if (string.IsNullOrEmpty(tablePath))
-            {
-                tablePath = "pinyin.tsv";
-            }
-            if (!tablePath.Contains('\\'))
-            {
-                tablePath = Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Tables", tablePath);
-            }
-
-            using var reader = File.OpenText(tablePath);
-            Debug.WriteLine($"开始读取字典 '{tablePath}'");
-            Stopwatch sw = Stopwatch.StartNew();
-            var lines = await reader.ReadToEndAsync();
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            var dict =
-                lines
-                    .Split(new[] { '\r', '\n' })
-                    .AsParallel()
-                    .WithCancellation(cancellationToken)
-                    .Where(i => i.Length >= 3 && i[1] == separator)
-                    .Select(i =>
-                    {
-                        var r = i.Split(separator);
-                        return (r[0], r[1].CapitalizeLeadingCharacter());
-                    }).GroupBy(i => i.Item1)
-                    .ToDictionary(i => i.Key, i => i.Select(i => i.Item2).ToImmutableArray());
-
-            sw.Stop();
-            Debug.WriteLine($"字典 '{tablePath}' 读取完成, 用时 {sw.Elapsed}");
-            return instance = new CharacterTable(tablePath, dict);
-        }
-        catch (Exception e)
-        {
-            Debug.WriteLine($"读取字典 '{tablePath}' 并创建字表时出错: \n{e}");
-            throw;
-        }
-        finally
-        {
-            slim.Release();
-        }
+        return null;
     }
 
-    public ImmutableArray<string> GetCharacterSpellings(string str)
+    public string? QuerySingle(char value)
     {
-        if (table.TryGetValue(str, out var r)) return r;
-        r = ImmutableArray.Create(str);
-        table[str] = r;
-        return r;
+        if (_singleSpellingTable.TryGetValue(value, out var spelling))
+        {
+            return spelling;
+        }
+
+        return null;
     }
 
-    public string Convert(string value, bool disallowMultipleSpellings)
-    {
-        if (disallowMultipleSpellings != lastDisallowMultipleSpellings)
-        {
-            lastDisallowMultipleSpellings = disallowMultipleSpellings;
-            Debug.WriteLine($"DisallowMultipleSpellings changed to {disallowMultipleSpellings}. Cleaning cache.");
-            cache.Clear();
-        }
-
-        if (cache.TryGetValue(value, out var spellings))
-        {
-            return spellings;
-        }
-
-        Debug.WriteLine($"No spelling caches for {value}.");
-
-        spellings = string.Empty;
-        for (int k = 0; k < value.Length; k++)
-        {
-            var item = value[k];
-            var result = GetCharacterSpellings(item.ToString());
-            spellings += disallowMultipleSpellings || result.Length == 1 ? result[0] : ("{" + string.Join("/", result) + "}");
-        }
-        cache.TryAdd(value, spellings);
-
-        return spellings;
-    }
+    #endregion Public 方法
 }

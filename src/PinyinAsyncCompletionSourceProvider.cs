@@ -1,4 +1,6 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
@@ -6,7 +8,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
+
 using ChinesePinyinIntelliSenseExtender.Options;
+
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
@@ -30,7 +34,7 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
     private readonly ConditionalWeakTable<ITextView, IAsyncCompletionSource> _completionSourceCache = new();
 
     [ImportMany]
-    private readonly Lazy<IAsyncCompletionSourceProvider>[] _lazyAsyncCompletionSourceProviders;
+    private readonly Lazy<IAsyncCompletionSourceProvider>[] _lazyAsyncCompletionSourceProviders = null!;
 
     #endregion Private 字段
 
@@ -72,14 +76,14 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
                         return null;
                     })
                     .Where(m => m is not null)
-                    .ToList();
+                    .ToList()!;
             }
 
             Debug.WriteLine($"Total {otherAsyncCompletionSources?.Count ?? 0} IAsyncCompletionSource found.");
 
             IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
                                                       ? EmptyAsyncCompletionSource.Instance
-                                                      : new PinyinAsyncCompletionSource(otherAsyncCompletionSources);
+                                                      : new PinyinAsyncCompletionSource(otherAsyncCompletionSources, GeneralOptions.Instance);
 
             _completionSourceCache.Add(textView, completionSource);
 
@@ -92,6 +96,8 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
     }
 
     #endregion Public 方法
+
+    #region Private 方法
 
     private bool CheckShouldIgnore(ITextView textView)
     {
@@ -125,6 +131,8 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
         return false;
     }
 
+    #endregion Private 方法
+
     #region Private 类
 
     private class EmptyAsyncCompletionSource : IAsyncCompletionSource
@@ -137,9 +145,9 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
 
         #region Public 方法
 
-        public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token) => Task.FromResult<CompletionContext>(null);
+        public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token) => Task.FromResult<CompletionContext>(null!);
 
-        public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token) => Task.FromResult<object>(null);
+        public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token) => Task.FromResult<object>(null!);
 
         public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token) => CompletionStartData.DoesNotParticipateInCompletion;
 
