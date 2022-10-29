@@ -56,8 +56,6 @@
     <Compile Include="Util\CharacterTableGroupProvider.cs" />
     <Compile Include="Util\CharacterTableLoader.cs" />
     <Compile Include="Util\CharacterTable.cs" />
-    <Compile Include="Util\ChineseCharPinyinMap.cs" />
-    <Compile Include="Util\ChineseCharPinyinConverter.cs" />
     <Compile Include="PinyinAsyncCompletionSource.cs" />
     <Compile Include="PinyinAsyncCompletionSourceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -49,8 +49,8 @@ internal class GeneralOptions : Options<GeneralOptions>
     #region 字典
 
     [Category("字典")]
-    [DisplayName("自定附加义字典路径")]
-    [Description("字典每一行的格式：\"汉字 拼写\"（用制表符分隔开）。")]
+    [DisplayName("自定附加义字典文件路径")]
+    [Description("字典文件每一行的格式：\"汉字 拼写\"（用制表符分隔开）。")]
     [DefaultValue(new string[0])]
     public string[] CustomAdditionalDictionaryPaths { get; set; } = Array.Empty<string>();
 
