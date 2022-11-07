@@ -46,3 +46,8 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 `./src/Assets/Tables/pinyin.tsv` -> `pinyin_simp.dict.yaml` - [Rime/rime-pinyin-simp 袖珍简化字拼音](https://github.com/rime/rime-pinyin-simp)（[Apache-2.0 协议](https://github.com/rime/rime-pinyin-simp/blob/master/LICENSE)）
 
 `./src/Assets/Tables/wubi86.tsv` -> `wubi86_jidian.dict.yaml` - [KyleBing/rime-wubi86-jidian 86五笔极点码表 for 鼠须管(macOS)、小狼毫(Windows)、中州韵(Linux:Ubuntu) 五笔输入法](https://github.com/KyleBing/rime-wubi86-jidian)（[Apache-2.0 协议](https://github.com/KyleBing/rime-wubi86-jidian/blob/master/LICENSE)）
+
+## 其他平台类似插件
+
+* [Jetbrains/IntelliJ](https://github.com/tuchg/ChinesePinyin-CodeCompletionHelper)
+* [VSCode](https://gitee.com/Program-in-Chinese/vscode_Chinese_Input_Assistant)
