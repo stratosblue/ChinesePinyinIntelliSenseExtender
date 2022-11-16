@@ -1,10 +1,11 @@
 ﻿#nullable enable
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,6 +28,11 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
     #region Private 字段
 
     /// <summary>
+    /// <see cref="IAsyncCompletionSourceProvider"/> 的类型缓存
+    /// </summary>
+    private static readonly ConcurrentDictionary<Type, string[]> s_providerContentTypeCache = new();
+
+    /// <summary>
     /// 递归标记
     /// </summary>
     private static readonly AsyncLocal<bool> s_recursionTag = new();
@@ -37,6 +43,15 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
     private readonly Lazy<IAsyncCompletionSourceProvider>[] _lazyAsyncCompletionSourceProviders = null!;
 
     #endregion Private 字段
+
+    #region Public 构造函数
+
+    static PinyinAsyncCompletionSourceProvider()
+    {
+        s_providerContentTypeCache.TryAdd(typeof(PinyinAsyncCompletionSourceProvider), Array.Empty<string>());
+    }
+
+    #endregion Public 构造函数
 
     #region Public 方法
 
@@ -58,32 +73,32 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
             }
             Debug.WriteLine($"No completionSource cache for {textView}.");
 
-            List<IAsyncCompletionSource>? otherAsyncCompletionSources = null;
-            if (!CheckShouldIgnore(textView))
+            if (CheckShouldIgnore(textView))
             {
-                otherAsyncCompletionSources = _lazyAsyncCompletionSourceProviders
-                    .Select(lazy =>
-                    {
-                        if (lazy.Value is IAsyncCompletionSourceProvider provider
-                            && provider.GetType() != typeof(PinyinAsyncCompletionSourceProvider))
-                        {
-                            try
-                            {
-                                return provider.GetOrCreate(textView);
-                            }
-                            catch { }
-                        }
-                        return null;
-                    })
-                    .Where(m => m is not null)
-                    .ToList()!;
+                return EmptyAsyncCompletionSource.Instance;
             }
+
+            var currentContentType = textView.TextBuffer.ContentType;
+
+            var otherAsyncCompletionSources = _lazyAsyncCompletionSourceProviders
+                .Where(m => CheckShouldCreateCompletionSource(m.Value, currentContentType))
+                .Select(lazy =>
+                {
+                    try
+                    {
+                        return lazy.Value.GetOrCreate(textView);
+                    }
+                    catch { }
+                    return null;
+                })
+                .Where(m => m is not null)
+                .ToList()!;
 
             Debug.WriteLine($"Total {otherAsyncCompletionSources?.Count ?? 0} IAsyncCompletionSource found.");
 
             IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
                                                       ? EmptyAsyncCompletionSource.Instance
-                                                      : new PinyinAsyncCompletionSource(otherAsyncCompletionSources, GeneralOptions.Instance);
+                                                      : new PinyinAsyncCompletionSource(otherAsyncCompletionSources!, GeneralOptions.Instance);
 
             _completionSourceCache.TryAdd(textView, completionSource);
 
@@ -98,6 +113,22 @@ internal class PinyinAsyncCompletionSourceProvider : IAsyncCompletionSourceProvi
     #endregion Public 方法
 
     #region Private 方法
+
+    private static bool CheckShouldCreateCompletionSource(IAsyncCompletionSourceProvider? sourceProvider, IContentType contentType)
+    {
+        if (sourceProvider is null)
+        {
+            return false;
+        }
+
+        var contentTypeValues = s_providerContentTypeCache.GetOrAdd(sourceProvider.GetType(), type =>
+        {
+            var contentTypeAttributes = type.GetCustomAttributes<ContentTypeAttribute>();
+            return contentTypeAttributes.Select(m => m.ContentTypes).ToArray();
+        });
+
+        return contentTypeValues.Any(contentType.IsOfType);
+    }
 
     private bool CheckShouldIgnore(ITextView textView)
     {

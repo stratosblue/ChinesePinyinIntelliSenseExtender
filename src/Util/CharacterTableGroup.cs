@@ -79,6 +79,10 @@ internal class CharacterTableGroup
                     {
                         builder.Append(itemValue);
                     }
+                    else
+                    {
+                        builder.Append(item);
+                    }
                 }
                 builder.Append("]/");
             }
@@ -96,6 +100,10 @@ internal class CharacterTableGroup
                     if (table.QuerySingle(item) is string itemValue)
                     {
                         builder.Append(itemValue);
+                    }
+                    else
+                    {
+                        builder.Append(item);
                     }
                 }
                 builder.Append("]/");
