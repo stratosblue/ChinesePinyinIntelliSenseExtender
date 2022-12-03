@@ -78,11 +78,12 @@ public unsafe class InputMethodReverseDictionary
     /// </summary>
     /// <param name="text">要进行匹配的文本</param>
     /// <returns></returns>
-    public MatchedStringSet Match(ReadOnlySpan<char> text)
+    public bool TryMatch(ReadOnlySpan<char> text, out MatchedStringSet matchedStringSet)
     {
         var all = new List<UnsafeString[]>(text.Length);
 
         var count = 1;
+        var hasMatched = false;
 
         while (_stringTrieRoot.TryMatchOne(text, out var matchedStart, out var matchedLength, out var value))
         {
@@ -105,6 +106,13 @@ public unsafe class InputMethodReverseDictionary
             }
             all.Add(list);
             text = text.Slice(matchedStart + matchedLength);
+            hasMatched = true;
+        }
+
+        if (!hasMatched)
+        {
+            matchedStringSet = default;
+            return false;
         }
 
         if (text.Length > 0)    //还有剩余未匹配
@@ -136,7 +144,8 @@ public unsafe class InputMethodReverseDictionary
             });
         }
 
-        return new(strings);
+        matchedStringSet = new(strings);
+        return true;
 
         //排列组合索引
         static void IndexPermutation<T>(IEnumerable<IEnumerable<T>> items, Action<int[]> itemPermutationCallback)

@@ -13,7 +13,16 @@ internal sealed class OptionPages
         {
             base.SaveSettingsToStorage();
 
-            _ = CharacterTableGroupProvider.LoadFromOptionsAsync((GeneralOptions)AutomationObject, default);
+            var options = (GeneralOptions)AutomationObject;
+
+            if (options.UseLegacy)
+            {
+                _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, default);
+            }
+            else
+            {
+                _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, default);
+            }
         }
     }
 }

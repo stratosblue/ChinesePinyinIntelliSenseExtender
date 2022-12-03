@@ -1,5 +1,4 @@
-﻿using System;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Threading;
 
 using ChinesePinyinIntelliSenseExtender.Options;
@@ -38,7 +37,14 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
 
         var options = await GeneralOptions.GetLiveInstanceAsync(cancellationToken);
 
-        _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
+        if (options.UseLegacy)
+        {
+            _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
+        }
+        else
+        {
+            _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
+        }
     }
 
     #endregion Package Members

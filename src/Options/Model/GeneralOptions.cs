@@ -1,8 +1,6 @@
 ﻿#nullable enable
 
-using System;
 using System.ComponentModel;
-using System.Linq;
 
 namespace ChinesePinyinIntelliSenseExtender.Options;
 
@@ -21,12 +19,6 @@ internal class GeneralOptions : Options<GeneralOptions>
     #region 基础
 
     [Category("基础")]
-    [DisplayName("仅判断首字符")]
-    [Description("仅检查首字符是否为中文（提高响应速度）")]
-    [DefaultValue(false)]
-    public bool CheckFirstCharOnly { get; set; } = false;
-
-    [Category("基础")]
     [DisplayName("启用")]
     [Description("是否启用拼音联想功能")]
     [DefaultValue(true)]
@@ -43,6 +35,18 @@ internal class GeneralOptions : Options<GeneralOptions>
     [Description("多个拓展名使用 \";\" 进行分割，如 \"cs;js\"（修改仅对新开启标签页生效）")]
     [DefaultValue("")]
     public string ExcludeExtensions { get => _excludeExtensions; set => ChangeExcludeExtensions(value); }
+
+    [Category("基础")]
+    [DisplayName("预检查模式")]
+    [Description("在转换前预检查是否需要转换（包含中文），以提高速度。None: 不进行预检查，所有条目都将尝试进行转换；FirstChar：仅首字符；FullText：检查所有字符；")]
+    [DefaultValue(PreMatchType.FirstChar)]
+    public PreMatchType PreMatchType { get; set; } = PreMatchType.FirstChar;
+
+    [Category("基础")]
+    [DisplayName("使用旧模式")]
+    [Description("使用旧的拼写转换模式")]
+    [DefaultValue(false)]
+    public bool UseLegacy { get; set; } = false;
 
     #endregion 基础
 
@@ -79,8 +83,14 @@ internal class GeneralOptions : Options<GeneralOptions>
     [Category("展示")]
     [DisplayName("DisplayText的展示格式")]
     [Description("参数 {0} 为原 DisplayText ，参数 {1} 为拼写文本 (置空则展示原文)")]
-    [DefaultValue("{0} {1}")]
-    public string? DisplayTextFormat { get; set; } = "{0} {1}";
+    [DefaultValue("{0} [{1}]")]
+    public string? DisplayTextFormat { get; set; } = "{0} [{1}]";
+
+    [Category("展示")]
+    [DisplayName("单个条目展示（旧模式不可用）")]
+    [Description("对于多音字/多字典的条目，每个匹配项在完成列表中展示为单独项。")]
+    [DefaultValue(true)]
+    public bool SingleWordsDisplay { get; set; } = true;
 
     #endregion 展示
 

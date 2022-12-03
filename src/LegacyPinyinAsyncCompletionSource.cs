@@ -20,7 +20,7 @@ using Microsoft.VisualStudio.Utilities;
 
 namespace ChinesePinyinIntelliSenseExtender;
 
-internal class LegacyPinyinAsyncCompletionSourceLegacy : IAsyncCompletionSource
+internal class LegacyPinyinAsyncCompletionSource : IAsyncCompletionSource
 {
     #region Private 字段
 
@@ -41,7 +41,7 @@ internal class LegacyPinyinAsyncCompletionSourceLegacy : IAsyncCompletionSource
 
     #region Public 构造函数
 
-    public LegacyPinyinAsyncCompletionSourceLegacy(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
+    public LegacyPinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
     {
         _otherAsyncCompletionSources = otherAsyncCompletionSources ?? throw new ArgumentNullException(nameof(otherAsyncCompletionSources));
         _options = options ?? throw new ArgumentNullException(nameof(options));
@@ -71,7 +71,12 @@ internal class LegacyPinyinAsyncCompletionSourceLegacy : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = _options.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
+            Func<string, bool> shouldProcessCheckDelegate = _options.PreMatchType switch
+            {
+                PreMatchType.FirstChar => ChineseCheckUtil.StartWithChinese,
+                PreMatchType.FullText => ChineseCheckUtil.ContainsChinese,
+                _ => static _ => true,
+            };
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 

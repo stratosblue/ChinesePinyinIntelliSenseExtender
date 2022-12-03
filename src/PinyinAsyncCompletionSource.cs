@@ -1,12 +1,9 @@
 ﻿#nullable enable
 
-using System;
-using System.Collections.Generic;
+using System.Buffers;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
@@ -35,7 +32,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     private readonly GeneralOptions _options;
     private readonly IEnumerable<IAsyncCompletionSource> _otherAsyncCompletionSources;
-    private CharacterTableGroup? _characterTableGroup;
+    private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
 
     #endregion Private 字段
 
@@ -63,7 +60,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         {
             s_getCompletionContextRecursionTag.Value = true;
 
-            _characterTableGroup ??= await CharacterTableGroupProvider.GetAsync();
+            _inputMethodDictionaryGroup ??= await InputMethodDictionaryGroupProvider.GetAsync();
 
             var tasks = _otherAsyncCompletionSources.Select(m => m.GetCompletionContextAsync(session, trigger, triggerLocation, applicableToSpan, token)).ToArray();
 
@@ -71,21 +68,35 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = _options.CheckFirstCharOnly ? ChineseCheckUtil.StartWithChinese : ChineseCheckUtil.ContainsChinese;
+            Func<string, bool> shouldProcessCheckDelegate = _options.PreMatchType switch
+            {
+                PreMatchType.FirstChar => ChineseCheckUtil.StartWithChinese,
+                PreMatchType.FullText => ChineseCheckUtil.ContainsChinese,
+                _ => static _ => true,
+            };
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
-            var query =
+            var count = tasks.Sum(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.Length : 0);
+
+            var itemBuffer = ArrayPool<CompletionItem>.Shared.Rent(count);
+            try
+            {
+                int bufferIndex = 0;
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .Select(m => CreateCompletionItemWithConvertion(m, shouldProcessCheckDelegate));
+                                  .ForAll(m => CreateCompletionItemWithConvertion(m, shouldProcessCheckDelegate, itemBuffer, ref bufferIndex));
 
-            var pinyinCompletions = query.Where(static m => m is not null)
-                                         .ToImmutableArray();
-
-            return pinyinCompletions.Length == 0
-                   ? null
-                   : new CompletionContext(pinyinCompletions!);
+                if (bufferIndex > 0)
+                {
+                    return new CompletionContext(ImmutableArray.Create(itemBuffer, 0, bufferIndex));
+                }
+                return null;
+            }
+            finally
+            {
+                ArrayPool<CompletionItem>.Shared.Return(itemBuffer);
+            }
         }
         finally
         {
@@ -115,20 +126,20 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private CompletionItem? CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck)
+    private void CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CompletionItem[] itemBuffer, ref int bufferIndex)
     {
         var originInsertText = originCompletionItem.InsertText;
 
         if (!shouldProcessCheck(originInsertText))
         {
-            return null;
+            return;
         }
 
-        var spellings = _characterTableGroup!.Convert(originInsertText, _options.EnableMultipleSpellings);
+        var spellings = _inputMethodDictionaryGroup!.FindAll(originInsertText);
 
-        if (string.IsNullOrEmpty(spellings))
+        if (spellings.Length == 0)
         {
-            return null;
+            return;
         }
 
         if (_options.EnableFSharpSupport
@@ -138,23 +149,45 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             originInsertText = nameInCode!;
         }
 
-        var appendCompletionItem = new CompletionItem(displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spellings!),
-                                                      source: this,
-                                                      icon: originCompletionItem.Icon,
-                                                      filters: s_chineseFilters,
-                                                      suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spellings!),
-                                                      insertText: originInsertText,
-                                                      sortText: spellings!,
-                                                      filterText: spellings!,
-                                                      automationText: originCompletionItem.AutomationText,
-                                                      attributeIcons: originCompletionItem.AttributeIcons,
-                                                      commitCharacters: originCompletionItem.CommitCharacters,
-                                                      applicableToSpan: originCompletionItem.ApplicableToSpan,
-                                                      isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
-                                                      isPreselected: originCompletionItem.IsPreselected);
+        if (_options.SingleWordsDisplay)
+        {
+            foreach (var spelling in spellings)
+            {
+                itemBuffer[Interlocked.Increment(ref bufferIndex) - 1] = CreateCompletionItem(originCompletionItem, originInsertText, spelling);
+            }
+        }
+        else if (_options.EnableMultipleSpellings)
+        {
+            itemBuffer[Interlocked.Increment(ref bufferIndex) - 1] = CreateCompletionItem(originCompletionItem, originInsertText, string.Join("/", spellings));
+        }
+        else
+        {
+            itemBuffer[Interlocked.Increment(ref bufferIndex) - 1] = CreateCompletionItem(originCompletionItem, originInsertText, spellings[0]);
+        }
+    }
 
-        appendCompletionItem.Properties.AddProperty(this, originCompletionItem);
-        return appendCompletionItem;
+    #region CreateCompletionItem
+
+    private CompletionItem CreateCompletionItem(CompletionItem originCompletionItem, string originInsertText, string spelling)
+    {
+        var newCompletionItem = new CompletionItem(displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spelling),
+                                                   source: this,
+                                                   icon: originCompletionItem.Icon,
+                                                   filters: s_chineseFilters,
+                                                   suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spelling),
+                                                   insertText: originInsertText,
+                                                   sortText: spelling,
+                                                   filterText: spelling,
+                                                   automationText: originCompletionItem.AutomationText,
+                                                   attributeIcons: originCompletionItem.AttributeIcons,
+                                                   commitCharacters: originCompletionItem.CommitCharacters,
+                                                   applicableToSpan: originCompletionItem.ApplicableToSpan,
+                                                   isCommittedAsSnippet: originCompletionItem.IsCommittedAsSnippet,
+                                                   isPreselected: originCompletionItem.IsPreselected);
+
+        newCompletionItem.Properties.AddProperty(this, originCompletionItem);
+
+        return newCompletionItem;
 
         static string Format(string? format, string origin, string spellings)
         {
@@ -173,6 +206,8 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             }
         }
     }
+
+    #endregion CreateCompletionItem
 
     #region NameInCode
 
