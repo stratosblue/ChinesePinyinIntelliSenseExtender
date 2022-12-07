@@ -1,12 +1,7 @@
 ﻿#nullable enable
 
-using System;
-using System.Collections.Immutable;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;
 
@@ -40,6 +35,7 @@ internal static class CharacterTableLoader
 
     public static async Task<CharacterTable> LoadFileAsync(string path, CancellationToken cancellationToken = default)
     {
+        path = path.Trim('\"');
         if (!File.Exists(path))
         {
             throw new FileNotFoundException($"找不到文件 \"{path}\"");

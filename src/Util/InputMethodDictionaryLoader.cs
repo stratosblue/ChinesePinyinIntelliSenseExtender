@@ -37,6 +37,7 @@ internal static class InputMethodDictionaryLoader
 
     public static async Task<InputMethodReverseDictionary> LoadFileAsync(string path, CancellationToken cancellationToken = default)
     {
+        path = path.Trim('\"');
         if (!File.Exists(path))
         {
             throw new FileNotFoundException($"找不到文件 \"{path}\"");

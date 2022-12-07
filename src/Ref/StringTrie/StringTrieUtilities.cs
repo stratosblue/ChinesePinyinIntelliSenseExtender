@@ -25,12 +25,14 @@ public class StringTrieUtilities
 
         int length = 0;
         int sliceStart = 0;
-        for (int index = 0; index < text.Length; index++)
+        int index = 0;
+        for (; index < text.Length; index++)
         {
             var current = textSpan[index];
             if (current == '\n'
                 && length > 0)
             {
+                //去除头部空白
                 while (sliceStart < index
                        && char.IsWhiteSpace(textSpan[sliceStart]))
                 {
@@ -38,21 +40,23 @@ public class StringTrieUtilities
                     sliceStart++;
                 }
 
-                if (sliceStart == index)
+                if (sliceStart == index)    //纯空白，跳过此行
                 {
                     length = 0;
                     sliceStart = index;
                     continue;
                 }
 
+                //倒序索引，去除尾部空白
                 int reverseIndex = sliceStart + length;
                 while (reverseIndex > sliceStart
                        && char.IsWhiteSpace(textSpan[reverseIndex]))
                 {
+                    length--;
                     reverseIndex--;
                 }
 
-                if (reverseIndex != sliceStart)
+                if (reverseIndex != sliceStart) //非纯空白行
                 {
                     words.Add(text.Slice(sliceStart, reverseIndex - sliceStart + 1));
                 }
@@ -63,6 +67,31 @@ public class StringTrieUtilities
             else
             {
                 length++;
+            }
+        }
+
+        index--;
+
+        if (sliceStart < index)    //还有余下部分未处理
+        {
+            while (sliceStart < index
+                   && char.IsWhiteSpace(textSpan[sliceStart]))
+            {
+                length--;
+                sliceStart++;
+            }
+            if (sliceStart != index)    //非纯空白
+            {
+                while (index > sliceStart
+                       && char.IsWhiteSpace(textSpan[index]))
+                {
+                    length--;
+                    index--;
+                }
+                if (index != sliceStart) //非纯空白
+                {
+                    words.Add(text.Slice(sliceStart, index - sliceStart + 1));
+                }
             }
         }
 
