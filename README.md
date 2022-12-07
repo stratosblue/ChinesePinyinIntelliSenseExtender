@@ -3,6 +3,7 @@
 VisualStudio中文代码拼音补全拓展。
 
 - 仅在 `C#` 和 `F#` 下进行了测试，理论上支持所有基于 `IAsyncCompletionSource` 的完成。
+- 支持自定义字符映射。
 
 View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?itemName=stratos.ChinesePinyinIntelliSenseExtender)
 
@@ -23,9 +24,13 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 
 ![自定义字典](./assets/custom_dict.gif)
 
+自定义字符串映射：
+
+![自定义字符串映射](./assets/custom_string_map.png)
+
 ## 自定义字典
 
-字典是一个 tsv 文件，其内的每一行包括要转换的字和对应的拼写方式，如：
+字典是一个 tsv 文件，其内的每一行包括要映射的字符串和对应的映射值，原字符与映射之间使用 `\t` 来分隔，映射值可以使用空格进行分隔。如：
 
 ``` tsv
 芳	fang
@@ -33,11 +38,19 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 房	fang
 方	fang
 放	fang
+放假	fang jia
+放假了	FangJiaLe
 ```
 
 参考： [pinyin.tsv](./src/Assets/Tables/pinyin.tsv) 和 [wubi86.tsv](./src/Assets/Tables/wubi86.tsv)。
 
 [该脚本](./script/make_word_table_from_rime_dict.fsx)演示了如何将 rime 输入方案的词典文件内取出里面的所有的字。
+
+---------------------
+
+### * 现在支持直接使用 rime 输入方案的词典文件
+
+---------------------
 
 ## 引用
 
