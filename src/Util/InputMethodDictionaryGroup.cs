@@ -25,6 +25,8 @@ internal sealed class InputMethodDictionaryGroup : IDisposable
     #region Public 属性
 
     public ImmutableArray<InputMethodReverseDictionary> InputMethodDictionaries => _inputMethodDictionaries.ToImmutableArray();
+    
+    public bool IsDisposed => _disposedValue;
 
     #endregion Public 属性
 

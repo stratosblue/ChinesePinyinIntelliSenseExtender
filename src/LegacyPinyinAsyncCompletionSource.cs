@@ -1,12 +1,8 @@
 ﻿#nullable enable
 
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
-using System.Threading.Tasks;
 
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
@@ -71,12 +67,7 @@ internal class LegacyPinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = _options.PreMatchType switch
-            {
-                PreMatchType.FirstChar => ChineseCheckUtil.StartWithChinese,
-                PreMatchType.FullText => ChineseCheckUtil.ContainsChinese,
-                _ => static _ => true,
-            };
+            Func<string, bool> shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(_options.PreMatchType, _options.PreCheckRule);
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 

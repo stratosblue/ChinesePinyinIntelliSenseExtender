@@ -50,6 +50,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Options\Model\Options.cs" />
+    <Compile Include="Options\Model\StringPreCheckRule.cs" />
     <Compile Include="Options\Model\PreMatchType.cs" />
     <Compile Include="Options\OptionPage.cs">
       <SubType>Component</SubType>
@@ -85,6 +86,7 @@
     <Compile Include="Usings.cs" />
     <Compile Include="Util\CharacterTableGroup.cs" />
     <Compile Include="Util\CharacterTableGroupProvider.cs" />
+    <Compile Include="Util\StringPreMatchUtil.cs" />
     <Compile Include="Util\InputMethodDictionaryLoader.cs" />
     <Compile Include="Util\CharacterTableLoader.cs" />
     <Compile Include="Util\CharacterTable.cs" />

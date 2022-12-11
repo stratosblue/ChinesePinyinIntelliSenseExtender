@@ -37,18 +37,28 @@ internal class GeneralOptions : Options<GeneralOptions>
     public string ExcludeExtensions { get => _excludeExtensions; set => ChangeExcludeExtensions(value); }
 
     [Category("基础")]
-    [DisplayName("预检查模式")]
-    [Description("在转换前预检查是否需要转换（包含中文），以提高速度。None: 不进行预检查，所有条目都将尝试进行转换；FirstChar：仅首字符；FullText：检查所有字符；")]
-    [DefaultValue(PreMatchType.FirstChar)]
-    public PreMatchType PreMatchType { get; set; } = PreMatchType.FirstChar;
-
-    [Category("基础")]
     [DisplayName("使用旧模式")]
     [Description("使用旧的拼写转换模式")]
     [DefaultValue(false)]
     public bool UseLegacy { get; set; } = false;
 
     #endregion 基础
+
+    #region 字符映射
+
+    [Category("字符映射")]
+    [DisplayName("预检查规则")]
+    [Description("预检查模式启用时，进行字符检查的规则。IsChinese: 检查是否为中文；NonAscii：检查是否为非Ascii (0x00-0x7F) 字符；")]
+    [DefaultValue(StringPreCheckRule.IsChinese)]
+    public StringPreCheckRule PreCheckRule { get; set; } = StringPreCheckRule.IsChinese;
+
+    [Category("字符映射")]
+    [DisplayName("预检查模式")]
+    [Description("在映射前预检查是否需要映射，以提高速度。None: 不检查(所有条目都将尝试进行映射)；FirstChar：仅首字符；FullText：检查所有字符；")]
+    [DefaultValue(PreMatchType.FirstChar)]
+    public PreMatchType PreMatchType { get; set; } = PreMatchType.FirstChar;
+
+    #endregion 字符映射
 
     #region 字典
 

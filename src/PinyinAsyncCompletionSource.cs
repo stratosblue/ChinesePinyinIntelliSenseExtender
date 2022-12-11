@@ -60,7 +60,11 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         {
             s_getCompletionContextRecursionTag.Value = true;
 
-            _inputMethodDictionaryGroup ??= await InputMethodDictionaryGroupProvider.GetAsync();
+            if (_inputMethodDictionaryGroup is null
+                || _inputMethodDictionaryGroup.IsDisposed)
+            {
+                _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
+            }
 
             var tasks = _otherAsyncCompletionSources.Select(m => m.GetCompletionContextAsync(session, trigger, triggerLocation, applicableToSpan, token)).ToArray();
 
@@ -68,18 +72,13 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = _options.PreMatchType switch
-            {
-                PreMatchType.FirstChar => ChineseCheckUtil.StartWithChinese,
-                PreMatchType.FullText => ChineseCheckUtil.ContainsChinese,
-                _ => static _ => true,
-            };
+            Func<string, bool> shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(_options.PreMatchType, _options.PreCheckRule);
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
             var count = tasks.Sum(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.Length : 0);
 
-            var itemBuffer = ArrayPool<CompletionItem>.Shared.Rent(count);
+            var itemBuffer = ArrayPool<CompletionItem>.Shared.Rent(count * 5);  //预留足够多的空间，避免字典过多导致的问题
             try
             {
                 int bufferIndex = 0;
