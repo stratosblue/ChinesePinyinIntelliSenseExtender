@@ -4,3 +4,6 @@
 [submodule "third/rime-wubi86-jidian"]
 	path = third/rime-wubi86-jidian
 	url = https://github.com/KyleBing/rime-wubi86-jidian
+[submodule "third/rime-jap-poly"]
+	path = third/rime-jap-poly
+	url = https://github.com/biopolyhedron/rime-jap-poly

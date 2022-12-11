@@ -38,7 +38,7 @@ internal class GeneralOptions : Options<GeneralOptions>
 
     [Category("基础")]
     [DisplayName("使用旧模式")]
-    [Description("使用旧的拼写转换模式")]
+    [Description("使用旧的拼写转换模式（准备废弃，对多音字处理效果较差。）")]
     [DefaultValue(false)]
     public bool UseLegacy { get; set; } = false;
 
@@ -111,6 +111,12 @@ internal class GeneralOptions : Options<GeneralOptions>
     [Description("启用F#的额外支持")]
     [DefaultValue(true)]
     public bool EnableFSharpSupport { get; set; } = true;
+
+    [Category("拓展")]
+    [DisplayName("启用内置的假名字典")]
+    [Description("启用内置的假名字典（旧模式不可用）")]
+    [DefaultValue(false)]
+    public bool EnableBuiltInKanaDic { get; set; } = false;
 
     #endregion 拓展
 

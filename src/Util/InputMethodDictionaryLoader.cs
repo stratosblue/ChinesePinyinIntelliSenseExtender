@@ -17,6 +17,8 @@ internal static class InputMethodDictionaryLoader
 
     #region Public 属性
 
+    public static string KanaDicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "jap_poly.dict.yaml");
+
     public static string PinyinDicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "pinyin_simp.dict.yaml");
 
     public static string Wubi86DicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "wubi86_jidian.dict.yaml");

@@ -81,6 +81,11 @@ internal class InputMethodDictionaryGroupProvider
     public static Task<InputMethodDictionaryGroup> LoadFromOptionsAsync(GeneralOptions options, CancellationToken cancellationToken)
     {
         var dicPaths = new List<string>();
+
+        if (options.EnableBuiltInKanaDic)
+        {
+            dicPaths.Add(InputMethodDictionaryLoader.KanaDicPath);
+        }
         if (options.EnableBuiltInWubi86Dic)
         {
             dicPaths.Add(InputMethodDictionaryLoader.Wubi86DicPath);

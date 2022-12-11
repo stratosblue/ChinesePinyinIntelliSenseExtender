@@ -60,6 +60,8 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 
 `./src/Assets/Tables/wubi86.tsv` -> `wubi86_jidian.dict.yaml` - [KyleBing/rime-wubi86-jidian 86五笔极点码表 for 鼠须管(macOS)、小狼毫(Windows)、中州韵(Linux:Ubuntu) 五笔输入法](https://github.com/KyleBing/rime-wubi86-jidian)（[Apache-2.0 协议](https://github.com/KyleBing/rime-wubi86-jidian/blob/master/LICENSE)）
 
+`./src/Assets/Dictionaries/jap_poly.dict.yaml` - [poly日文](https://github.com/biopolyhedron/rime-jap-poly)
+
 ## 其他平台类似插件
 
 * [Jetbrains/IntelliJ](https://github.com/tuchg/ChinesePinyin-CodeCompletionHelper)
