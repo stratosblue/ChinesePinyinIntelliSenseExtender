@@ -6,18 +6,19 @@ using System.Runtime.CompilerServices;
 
 using InputMethodDictionary;
 
-using Microsoft.VisualStudio.Shell.Interop;
 using Microsoft.VisualStudio.Utilities;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;
 
-internal sealed class InputMethodDictionaryGroup
+internal sealed class InputMethodDictionaryGroup : IDisposable
 {
     #region Private 字段
 
     private readonly InputMethodReverseDictionary[] _inputMethodDictionaries;
 
     private readonly ConditionalWeakTable<string, string[]> _resultCache = new();
+
+    private bool _disposedValue;
 
     #endregion Private 字段
 
@@ -40,6 +41,11 @@ internal sealed class InputMethodDictionaryGroup
 
     public string[] FindAll(string text)
     {
+        if (_disposedValue)
+        {
+            throw new ObjectDisposedException(nameof(InputMethodDictionaries));
+        }
+
         if (string.IsNullOrEmpty(text))
         {
             return Array.Empty<string>();
@@ -93,4 +99,32 @@ internal sealed class InputMethodDictionaryGroup
     }
 
     #endregion Public 方法
+
+    #region IDisposable
+
+    /// <summary>
+    ///
+    /// </summary>
+    ~InputMethodDictionaryGroup()
+    {
+        Dispose();
+    }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (!_disposedValue)
+        {
+            _disposedValue = true;
+
+            foreach (var item in _inputMethodDictionaries)
+            {
+                item.Dispose();
+            }
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    #endregion IDisposable
 }

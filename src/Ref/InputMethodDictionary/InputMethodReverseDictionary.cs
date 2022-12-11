@@ -6,7 +6,7 @@ namespace InputMethodDictionary;
 /// <summary>
 /// 输入法反向匹配字典
 /// </summary>
-public unsafe class InputMethodReverseDictionary
+public sealed unsafe class InputMethodReverseDictionary : IDisposable
 {
     private readonly StringTrieRoot<UnsafeStringSet> _stringTrieRoot;
 
@@ -19,6 +19,8 @@ public unsafe class InputMethodReverseDictionary
     /// <see cref="UnsafeString"/> 储存库
     /// </summary>
     private readonly NativeMemoryStore<UnsafeString> _unsafeStringStore;
+
+    private bool _disposedValue;
 
     /// <summary>
     /// <inheritdoc cref="InputMethodReverseDictionary"/>
@@ -71,6 +73,23 @@ public unsafe class InputMethodReverseDictionary
 
             return new(targetStrings, length);
         });
+    }
+
+    /// <summary>
+    /// 尝试完整匹配 <paramref name="text"/> 内容
+    /// </summary>
+    /// <param name="text">要进行匹配的文本</param>
+    /// <param name="result">匹配结果</param>
+    /// <returns>是否匹配成功</returns>
+    public bool TryFullMatch(ReadOnlySpan<char> text, out MatchResult result)
+    {
+        if (_stringTrieRoot.TryMatch(text, out var unsafeStringSet))
+        {
+            result = new(unsafeStringSet);
+            return true;
+        }
+        result = default;
+        return false;
     }
 
     /// <summary>
@@ -172,20 +191,30 @@ public unsafe class InputMethodReverseDictionary
         }
     }
 
+    #region IDisposable
+
     /// <summary>
-    /// 尝试完整匹配 <paramref name="text"/> 内容
+    ///
     /// </summary>
-    /// <param name="text">要进行匹配的文本</param>
-    /// <param name="result">匹配结果</param>
-    /// <returns>是否匹配成功</returns>
-    public bool TryFullMatch(ReadOnlySpan<char> text, out MatchResult result)
+    ~InputMethodReverseDictionary()
     {
-        if (_stringTrieRoot.TryMatch(text, out var unsafeStringSet))
-        {
-            result = new(unsafeStringSet);
-            return true;
-        }
-        result = default;
-        return false;
+        Dispose();
     }
+
+    /// <inheritdoc/>
+    public void Dispose()
+    {
+        if (!_disposedValue)
+        {
+            _disposedValue = true;
+
+            _stringTrieRoot.Dispose();
+            _targetValueStore.Dispose();
+            _unsafeStringStore.Dispose();
+
+            GC.SuppressFinalize(this);
+        }
+    }
+
+    #endregion IDisposable
 }

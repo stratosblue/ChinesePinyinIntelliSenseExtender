@@ -34,6 +34,16 @@ internal class InputMethodDictionaryGroupProvider
         if (Interlocked.Exchange(ref s_completionSource, completionSource) is TaskCompletionSource<InputMethodDictionaryGroup> oldCompletionSource)
         {
             oldCompletionSource.TrySetCanceled();
+
+            try
+            {
+                if (oldCompletionSource.Task.Status == TaskStatus.RanToCompletion)
+                {
+                    var oldGroup = oldCompletionSource.Task.Result;
+                    oldGroup.Dispose();
+                }
+            }
+            catch { }
         }
 
         if (dicPaths.Any())
