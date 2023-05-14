@@ -15,14 +15,7 @@ internal sealed class OptionPages
 
             var options = (GeneralOptions)AutomationObject;
 
-            if (options.UseLegacy)
-            {
-                _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, default);
-            }
-            else
-            {
-                _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, default);
-            }
+            _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, default);
         }
     }
 }

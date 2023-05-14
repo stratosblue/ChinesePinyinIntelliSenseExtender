@@ -30,25 +30,7 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 
 ## 自定义字典
 
-字典是一个 tsv 文件，其内的每一行包括要映射的字符串和对应的映射值，原字符与映射之间使用 `\t` 来分隔，映射值可以使用空格进行分隔。如：
-
-``` tsv
-芳	fang
-防	fang
-房	fang
-方	fang
-放	fang
-放假	fang jia
-放假了	FangJiaLe
-```
-
-参考： [pinyin.tsv](./src/Assets/Tables/pinyin.tsv) 和 [wubi86.tsv](./src/Assets/Tables/wubi86.tsv)。
-
-[该脚本](./script/make_word_table_from_rime_dict.fsx)演示了如何将 rime 输入方案的词典文件内取出里面的所有的字。
-
----------------------
-
-### * 现在支持直接使用 rime 输入方案的词典文件
+### * 现在支持直接使用 rime 输入方案的词典文件，自定义字典参照 rime 输入方案的字典文件 ([拼音](https://github.com/rime/rime-pinyin-simp/blob/master/pinyin_simp.dict.yaml)、[五笔](https://github.com/KyleBing/rime-wubi86-jidian/blob/master/wubi86_jidian.dict.yaml)) 来创建
 
 ---------------------
 
@@ -56,9 +38,9 @@ View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?it
 
 内置的字典来源于下列输入方案的词典：
 
-`./src/Assets/Tables/pinyin.tsv` -> `pinyin_simp.dict.yaml` - [Rime/rime-pinyin-simp 袖珍简化字拼音](https://github.com/rime/rime-pinyin-simp)（[Apache-2.0 协议](https://github.com/rime/rime-pinyin-simp/blob/master/LICENSE)）
+`./src/Assets/Dictionaries/pinyin_simp.dict.yaml` - [Rime/rime-pinyin-simp 袖珍简化字拼音](https://github.com/rime/rime-pinyin-simp)（[Apache-2.0 协议](https://github.com/rime/rime-pinyin-simp/blob/master/LICENSE)）
 
-`./src/Assets/Tables/wubi86.tsv` -> `wubi86_jidian.dict.yaml` - [KyleBing/rime-wubi86-jidian 86五笔极点码表 for 鼠须管(macOS)、小狼毫(Windows)、中州韵(Linux:Ubuntu) 五笔输入法](https://github.com/KyleBing/rime-wubi86-jidian)（[Apache-2.0 协议](https://github.com/KyleBing/rime-wubi86-jidian/blob/master/LICENSE)）
+`./src/Assets/Dictionaries/wubi86_jidian.dict.yaml` - [KyleBing/rime-wubi86-jidian 86五笔极点码表 for 鼠须管(macOS)、小狼毫(Windows)、中州韵(Linux:Ubuntu) 五笔输入法](https://github.com/KyleBing/rime-wubi86-jidian)（[Apache-2.0 协议](https://github.com/KyleBing/rime-wubi86-jidian/blob/master/LICENSE)）
 
 `./src/Assets/Dictionaries/jap_poly.dict.yaml` - [poly日文](https://github.com/biopolyhedron/rime-jap-poly)
 

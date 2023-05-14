@@ -37,14 +37,7 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
 
         var options = await GeneralOptions.GetLiveInstanceAsync(cancellationToken);
 
-        if (options.UseLegacy)
-        {
-            _ = CharacterTableGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
-        }
-        else
-        {
-            _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
-        }
+        _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
     }
 
     #endregion Package Members

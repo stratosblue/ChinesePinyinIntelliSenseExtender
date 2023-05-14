@@ -36,12 +36,6 @@ internal class GeneralOptions : Options<GeneralOptions>
     [DefaultValue("")]
     public string ExcludeExtensions { get => _excludeExtensions; set => ChangeExcludeExtensions(value); }
 
-    [Category("基础")]
-    [DisplayName("使用旧模式")]
-    [Description("使用旧的拼写转换模式（准备废弃，对多音字处理效果较差。）")]
-    [DefaultValue(false)]
-    public bool UseLegacy { get; set; } = false;
-
     #endregion 基础
 
     #region 字符映射
