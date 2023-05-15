@@ -57,22 +57,25 @@ internal class GeneralOptions : Options<GeneralOptions>
     #region 字典
 
     [Category("字典")]
-    [DisplayName("自定附加义字典文件路径")]
+    [DisplayName("自定附加义字典文件路径（已废弃，使用新的字典配置进行替代）")]
     [Description("字典文件每一行的格式：\"汉字 拼写\"（用制表符分隔开）。")]
     [DefaultValue(new string[0])]
-    public string[] CustomAdditionalDictionaryPaths { get; set; } = Array.Empty<string>();
+    [Obsolete("使用单独的字典配置替代", true)]
+    public string[] CustomAdditionalDictionaryPaths { get; internal set; } = Array.Empty<string>();
 
     [Category("字典")]
-    [DisplayName("启用内置的拼音字典")]
+    [DisplayName("启用内置的拼音字典（已废弃，使用新的字典配置进行替代）")]
     [Description("启用内置的拼音字典")]
     [DefaultValue(true)]
-    public bool EnableBuiltInPinyinDic { get; set; } = true;
+    [Obsolete("使用单独的字典配置替代", true)]
+    public bool EnableBuiltInPinyinDic { get; internal set; } = true;
 
     [Category("字典")]
-    [DisplayName("启用内置的五笔86字典")]
+    [DisplayName("启用内置的五笔86字典（已废弃，使用新的字典配置进行替代）")]
     [Description("启用内置的五笔86字典")]
     [DefaultValue(false)]
-    public bool EnableBuiltInWubi86Dic { get; set; } = false;
+    [Obsolete("使用单独的字典配置替代", true)]
+    public bool EnableBuiltInWubi86Dic { get; internal set; } = false;
 
     #endregion 字典
 
@@ -91,7 +94,7 @@ internal class GeneralOptions : Options<GeneralOptions>
     public string? DisplayTextFormat { get; set; } = "{0} [{1}]";
 
     [Category("展示")]
-    [DisplayName("单个条目展示（旧模式不可用）")]
+    [DisplayName("单个条目展示")]
     [Description("对于多音字/多字典的条目，每个匹配项在完成列表中展示为单独项。")]
     [DefaultValue(true)]
     public bool SingleWordsDisplay { get; set; } = true;
@@ -104,13 +107,14 @@ internal class GeneralOptions : Options<GeneralOptions>
     [DisplayName("启用F#支持")]
     [Description("启用F#的额外支持")]
     [DefaultValue(true)]
-    public bool EnableFSharpSupport { get; set; } = true;
+    public bool EnableFSharpSupport { get; set; } = false;
 
     [Category("拓展")]
-    [DisplayName("启用内置的假名字典")]
-    [Description("启用内置的假名字典（旧模式不可用）")]
+    [DisplayName("启用内置的假名字典（已废弃，使用新的字典配置进行替代）")]
+    [Description("启用内置的假名字典")]
     [DefaultValue(false)]
-    public bool EnableBuiltInKanaDic { get; set; } = false;
+    [Obsolete("使用单独的字典配置替代", true)]
+    public bool EnableBuiltInKanaDic { get; internal set; } = false;
 
     #endregion 拓展
 

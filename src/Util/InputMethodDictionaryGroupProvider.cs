@@ -14,16 +14,17 @@ internal class InputMethodDictionaryGroupProvider
 
     private static TaskCompletionSource<InputMethodDictionaryGroup>? s_completionSource;
 
-    private static string[]? s_lastDicPaths;
+    private static DictionaryCombination[]? s_lastDictionaryCombinations;
 
     #endregion Private 字段
 
     #region Public 方法
 
-    public static Task<InputMethodDictionaryGroup> ChangeAsync(IEnumerable<string> dicPaths, CancellationToken cancellationToken)
+    public static Task<InputMethodDictionaryGroup> ChangeAsync(IEnumerable<DictionaryCombination> combinations, CancellationToken cancellationToken)
     {
-        if (Interlocked.Exchange(ref s_lastDicPaths, dicPaths.ToArray()) is string[] lastDicPaths
-            && !(dicPaths.Except(lastDicPaths).Any() || lastDicPaths.Except(dicPaths).Any())
+        var dictionaryCombinations = combinations.Distinct().OrderBy(m => m.GetHashCode()).ToArray();
+        if (Interlocked.Exchange(ref s_lastDictionaryCombinations, dictionaryCombinations) is DictionaryCombination[] lastDictionaryCombinations
+            && !(dictionaryCombinations.Except(lastDictionaryCombinations).Any() || lastDictionaryCombinations.Except(dictionaryCombinations).Any())
             && s_completionSource is TaskCompletionSource<InputMethodDictionaryGroup> lastCompletionSource)
         {
             return lastCompletionSource.Task;
@@ -39,20 +40,22 @@ internal class InputMethodDictionaryGroupProvider
             {
                 if (oldCompletionSource.Task.Status == TaskStatus.RanToCompletion)
                 {
+#pragma warning disable VSTHRD103 // Call async methods when in an async method
                     var oldGroup = oldCompletionSource.Task.Result;
+#pragma warning restore VSTHRD103 // Call async methods when in an async method
                     oldGroup.Dispose();
                 }
             }
             catch { }
         }
 
-        if (dicPaths.Any())
+        if (dictionaryCombinations.Any())
         {
             _ = Task.Factory.StartNew(async _ =>
             {
                 try
                 {
-                    var tasks = dicPaths.Select(m => InputMethodDictionaryLoader.LoadFileAsync(m, cancellationToken)).ToArray();
+                    var tasks = dictionaryCombinations.Select(m => InputMethodDictionaryLoader.LoadFilesAsync(m.OrderedDictionaries.Select(m => m.FilePath), cancellationToken)).ToArray();
 
                     await Task.WhenAll(tasks);
 
@@ -78,29 +81,9 @@ internal class InputMethodDictionaryGroupProvider
 
     public static Task<InputMethodDictionaryGroup> GetAsync() => s_completionSource is null ? throw new InvalidOperationException("Not init yet.") : s_completionSource.Task;
 
-    public static Task<InputMethodDictionaryGroup> LoadFromOptionsAsync(GeneralOptions options, CancellationToken cancellationToken)
+    public static Task<InputMethodDictionaryGroup> LoadFromOptionsAsync(DictionaryManageOptions options, CancellationToken cancellationToken)
     {
-        var dicPaths = new List<string>();
-
-        if (options.EnableBuiltInKanaDic)
-        {
-            dicPaths.Add(InputMethodDictionaryLoader.KanaDicPath);
-        }
-        if (options.EnableBuiltInWubi86Dic)
-        {
-            dicPaths.Add(InputMethodDictionaryLoader.Wubi86DicPath);
-        }
-        if (options.EnableBuiltInPinyinDic)
-        {
-            dicPaths.Add(InputMethodDictionaryLoader.PinyinDicPath);
-        }
-
-        if (options.CustomAdditionalDictionaryPaths?.Length > 0)
-        {
-            dicPaths.AddRange(options.CustomAdditionalDictionaryPaths.Select(m => m.Trim()));
-        }
-
-        return ChangeAsync(dicPaths, cancellationToken);
+        return ChangeAsync(options.DictionaryCombinations, cancellationToken);
     }
 
     #endregion Public 方法

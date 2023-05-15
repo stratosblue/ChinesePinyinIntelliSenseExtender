@@ -15,17 +15,25 @@ public static class InputMethodDictionaryUtilities
     /// <summary>
     /// 创建反向匹配字典
     /// </summary>
-    /// <param name="dictionarySourceText">字典源字符串</param>
+    /// <param name="dictionarySourceTexts">字典源字符串</param>
     /// <returns></returns>
-    public static Dictionary<ReadOnlyMemory<char>, List<ReadOnlyMemory<char>>> CreateGenericReverseMap(ReadOnlyMemory<char> dictionarySourceText)
+    public static Dictionary<ReadOnlyMemory<char>, List<ReadOnlyMemory<char>>> CreateGenericReverseMap(params ReadOnlyMemory<char>[] dictionarySourceTexts)
     {
-        var dataSplitIndex = dictionarySourceText.Span.LastIndexOf(DataSplitString.AsSpan());
-        if (dataSplitIndex > 0)
+        IEnumerable<ReadOnlyMemory<char>> dictionarySourceTextAggregator = Array.Empty<ReadOnlyMemory<char>>();
+
+        for (int i = 0; i < dictionarySourceTexts.Length; i++)
         {
-            dictionarySourceText = dictionarySourceText.Slice(dataSplitIndex + DataSplitString.Length);
+            var dictionarySourceText = dictionarySourceTexts[i];
+            var dataSplitIndex = dictionarySourceText.Span.LastIndexOf(DataSplitString.AsSpan());
+            if (dataSplitIndex > 0)
+            {
+                dictionarySourceText = dictionarySourceText.Slice(dataSplitIndex + DataSplitString.Length);
+            }
+
+            dictionarySourceTextAggregator = dictionarySourceTextAggregator.Concat(StringTrieUtilities.SplitStringByLine(dictionarySourceText));
         }
 
-        var lines = StringTrieUtilities.SplitStringByLine(dictionarySourceText).DistinctToArray();
+        var lines = dictionarySourceTextAggregator.ToArray().DistinctToArray();
 
         var sourceTargetMap = new Dictionary<ReadOnlyMemory<char>, List<ReadOnlyMemory<char>>>(ReadOnlyMemoryCharEqualityComparer.Instance);
 

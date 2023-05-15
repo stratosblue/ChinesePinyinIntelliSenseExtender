@@ -14,6 +14,7 @@ namespace ChinesePinyinIntelliSenseExtender;
 [PackageRegistration(UseManagedResourcesOnly = true, AllowsBackgroundLoading = true)]
 [Guid(ChinesePinyinIntelliSenseExtenderPackage.PackageGuidString)]
 [ProvideOptionPage(typeof(OptionPages.General), "IntelliSense拼音补全", "常规", 0, 0, true)]
+[ProvideOptionPage(typeof(OptionPages.DictionaryManage), "IntelliSense拼音补全", "字典", 0, 0, true)]
 [ProvideAutoLoad(UIContextGuids80.NoSolution, PackageAutoLoadFlags.BackgroundLoad)]
 [ProvideAutoLoad(UIContextGuids80.SolutionExists, PackageAutoLoadFlags.BackgroundLoad)]
 [ProvideAutoLoad(UIContextGuids80.SolutionHasMultipleProjects, PackageAutoLoadFlags.BackgroundLoad)]
@@ -35,7 +36,7 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
     {
         await base.InitializeAsync(cancellationToken, progress);
 
-        var options = await GeneralOptions.GetLiveInstanceAsync(cancellationToken);
+        var options = await DictionaryManageOptions.GetLiveInstanceAsync(cancellationToken);
 
         _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, cancellationToken);
     }

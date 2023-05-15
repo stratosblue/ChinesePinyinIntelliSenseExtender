@@ -27,44 +27,46 @@ internal static class InputMethodDictionaryLoader
 
     #region Public 方法
 
-    public static Task<InputMethodReverseDictionary> LoadDefaultPinyinAsync(CancellationToken cancellationToken = default)
+    public static async Task<InputMethodReverseDictionary> LoadFilesAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        return LoadFileAsync(PinyinDicPath, cancellationToken);
-    }
+        var allPath = paths.Select(m => m.Trim('\"')).ToArray();
 
-    public static Task<InputMethodReverseDictionary> LoadDefaultWubi86Async(CancellationToken cancellationToken = default)
-    {
-        return LoadFileAsync(Wubi86DicPath, cancellationToken);
-    }
-
-    public static async Task<InputMethodReverseDictionary> LoadFileAsync(string path, CancellationToken cancellationToken = default)
-    {
-        path = path.Trim('\"');
-        if (!File.Exists(path))
+        foreach (var item in allPath)
         {
-            throw new FileNotFoundException($"找不到文件 \"{path}\"");
+            if (!File.Exists(item))
+            {
+                throw new FileNotFoundException($"找不到文件 \"{item}\"");
+            }
         }
 
-        Debug.WriteLine($"加载字表 '{path}'");
+        Debug.WriteLine($"加载字表 '{string.Join(", ", allPath)}'");
         try
         {
+            var texts = new ReadOnlyMemory<char>[allPath.Length];
+
             Stopwatch sw = Stopwatch.StartNew();
 
-            Debug.WriteLine($"开始读取字典 '{path}'");
+            for (int i = 0; i < allPath.Length; i++)
+            {
+                var item = allPath[i];
 
-            using var reader = File.OpenText(path);
-            var sourceFileText = await reader.ReadToEndAsync();
+                Debug.WriteLine($"开始读取字典 '{item}'");
 
-            var inputMethodReverseDictionary = new InputMethodReverseDictionary(InputMethodDictionaryUtilities.CreateGenericReverseMap(sourceFileText.AsMemory()), TitleCaseTextAdjuster.Instance);
+                using var reader = File.OpenText(item);
+                var sourceFileText = await reader.ReadToEndAsync();
+                texts[i] = sourceFileText.AsMemory();
+            }
+
+            var inputMethodReverseDictionary = new InputMethodReverseDictionary(InputMethodDictionaryUtilities.CreateGenericReverseMap(texts), TitleCaseTextAdjuster.Instance);
 
             sw.Stop();
-            Debug.WriteLine($"字典 '{path}' 读取完成, 用时 {sw.Elapsed}");
+            Debug.WriteLine($"字典 '{string.Join(", ", allPath)}' 读取完成, 用时 {sw.Elapsed}");
 
             return inputMethodReverseDictionary;
         }
         catch (Exception ex)
         {
-            Debug.WriteLine($"读取字典 '{path}' 并创建字表时出错: \n{ex}");
+            Debug.WriteLine($"读取字典 '{string.Join(", ", allPath)}' 并创建字表时出错: \n{ex}");
             throw;
         }
     }
