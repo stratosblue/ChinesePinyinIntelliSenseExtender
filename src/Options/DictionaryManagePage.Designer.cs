@@ -47,6 +47,7 @@ partial class DictionaryManagePage
             this.contextMenuStripDictionaryCombination = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItemDeleteSelectedDictionaryCombination = new System.Windows.Forms.ToolStripMenuItem();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.buttonResetDictionaryApplyCombination = new System.Windows.Forms.Button();
             this.buttonAddDictionaryApplyCombination = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
@@ -232,6 +233,7 @@ partial class DictionaryManagePage
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.buttonResetDictionaryApplyCombination);
             this.panel1.Controls.Add(this.buttonAddDictionaryApplyCombination);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.panel1.Location = new System.Drawing.Point(3, 378);
@@ -239,9 +241,19 @@ partial class DictionaryManagePage
             this.panel1.Size = new System.Drawing.Size(439, 100);
             this.panel1.TabIndex = 0;
             // 
+            // buttonResetDictionaryApplyCombination
+            // 
+            this.buttonResetDictionaryApplyCombination.Location = new System.Drawing.Point(19, 60);
+            this.buttonResetDictionaryApplyCombination.Name = "buttonResetDictionaryApplyCombination";
+            this.buttonResetDictionaryApplyCombination.Size = new System.Drawing.Size(113, 23);
+            this.buttonResetDictionaryApplyCombination.TabIndex = 1;
+            this.buttonResetDictionaryApplyCombination.Text = "重置为默认";
+            this.buttonResetDictionaryApplyCombination.UseVisualStyleBackColor = true;
+            this.buttonResetDictionaryApplyCombination.Click += new System.EventHandler(this.ButtonResetDictionaryApplyCombination_Click);
+            // 
             // buttonAddDictionaryApplyCombination
             // 
-            this.buttonAddDictionaryApplyCombination.Location = new System.Drawing.Point(18, 37);
+            this.buttonAddDictionaryApplyCombination.Location = new System.Drawing.Point(19, 19);
             this.buttonAddDictionaryApplyCombination.Name = "buttonAddDictionaryApplyCombination";
             this.buttonAddDictionaryApplyCombination.Size = new System.Drawing.Size(113, 23);
             this.buttonAddDictionaryApplyCombination.TabIndex = 1;
@@ -294,4 +306,5 @@ partial class DictionaryManagePage
     private System.Windows.Forms.Button buttonAddDictionaryApplyCombination;
     private System.Windows.Forms.ContextMenuStrip contextMenuStripDictionaryCombination;
     private System.Windows.Forms.ToolStripMenuItem toolStripMenuItemDeleteSelectedDictionaryCombination;
+    private System.Windows.Forms.Button buttonResetDictionaryApplyCombination;
 }

@@ -17,11 +17,11 @@ internal static class InputMethodDictionaryLoader
 
     #region Public 属性
 
-    public static string KanaDicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "jap_poly.dict.yaml");
+    public static string KanaDicPath => Path.Combine(".", "Assets", "Dictionaries", "jap_poly.dict.yaml");
 
-    public static string PinyinDicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "pinyin_simp.dict.yaml");
+    public static string PinyinDicPath => Path.Combine(".", "Assets", "Dictionaries", "pinyin_simp.dict.yaml");
 
-    public static string Wubi86DicPath => Path.Combine(Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location), "Assets", "Dictionaries", "wubi86_jidian.dict.yaml");
+    public static string Wubi86DicPath => Path.Combine(".", "Assets", "Dictionaries", "wubi86_jidian.dict.yaml");
 
     #endregion Public 属性
 
@@ -29,7 +29,9 @@ internal static class InputMethodDictionaryLoader
 
     public static async Task<InputMethodReverseDictionary> LoadFilesAsync(IEnumerable<string> paths, CancellationToken cancellationToken = default)
     {
-        var allPath = paths.Select(m => m.Trim('\"')).ToArray();
+        var workingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+        var allPath = paths.Select(m => Path.Combine(workingDirectory, m).Trim('\"')).ToArray();
 
         foreach (var item in allPath)
         {
