@@ -75,7 +75,7 @@ internal partial class DictionaryManagePage : UserControl
 
     private void ButtonResetDictionaryApplyCombination_Click(object sender, EventArgs e)
     {
-        if (MessageBox.Show("确定重置字典组合为默认值吗？", ChinesePinyinIntelliSenseExtenderPackage.PackageName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+        if (MessageBox.Show(this, "确定重置字典组合为默认值吗？", ChinesePinyinIntelliSenseExtenderPackage.PackageName, MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
         {
             Options.DictionaryCombinations.Clear();
             LoadDictionaryCombinationTree();

@@ -54,31 +54,6 @@ internal class GeneralOptions : Options<GeneralOptions>
 
     #endregion 字符映射
 
-    #region 字典
-
-    [Category("字典")]
-    [DisplayName("自定附加义字典文件路径（已废弃，使用新的字典配置进行替代）")]
-    [Description("字典文件每一行的格式：\"汉字 拼写\"（用制表符分隔开）。")]
-    [DefaultValue(new string[0])]
-    [Obsolete("使用单独的字典配置替代", true)]
-    public string[] CustomAdditionalDictionaryPaths { get; internal set; } = Array.Empty<string>();
-
-    [Category("字典")]
-    [DisplayName("启用内置的拼音字典（已废弃，使用新的字典配置进行替代）")]
-    [Description("启用内置的拼音字典")]
-    [DefaultValue(true)]
-    [Obsolete("使用单独的字典配置替代", true)]
-    public bool EnableBuiltInPinyinDic { get; internal set; } = true;
-
-    [Category("字典")]
-    [DisplayName("启用内置的五笔86字典（已废弃，使用新的字典配置进行替代）")]
-    [Description("启用内置的五笔86字典")]
-    [DefaultValue(false)]
-    [Obsolete("使用单独的字典配置替代", true)]
-    public bool EnableBuiltInWubi86Dic { get; internal set; } = false;
-
-    #endregion 字典
-
     #region 展示
 
     [Category("展示")]
@@ -106,15 +81,8 @@ internal class GeneralOptions : Options<GeneralOptions>
     [Category("拓展")]
     [DisplayName("启用F#支持")]
     [Description("启用F#的额外支持")]
-    [DefaultValue(true)]
-    public bool EnableFSharpSupport { get; set; } = false;
-
-    [Category("拓展")]
-    [DisplayName("启用内置的假名字典（已废弃，使用新的字典配置进行替代）")]
-    [Description("启用内置的假名字典")]
     [DefaultValue(false)]
-    [Obsolete("使用单独的字典配置替代", true)]
-    public bool EnableBuiltInKanaDic { get; internal set; } = false;
+    public bool EnableFSharpSupport { get; set; } = false;
 
     #endregion 拓展
 
