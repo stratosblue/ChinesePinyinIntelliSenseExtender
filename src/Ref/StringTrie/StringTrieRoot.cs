@@ -171,10 +171,16 @@ public sealed class StringTrieRoot<TValue>
 
             if (_nodes[index].TryMatch(text.Slice(i + 1), out var innerMatchedLength, out value))
             {
-                matchedStart = i;
                 matchedLength = innerMatchedLength + 1;
-                return true;
             }
+            else    //未使用尾部内容匹配到完整的词，将词首作为单个结果返回
+            {
+                matchedLength = 1;
+                value = _nodes[index].Value;
+            }
+
+            matchedStart = i;
+            return true;
         }
 
         value = default;

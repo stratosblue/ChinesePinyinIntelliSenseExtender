@@ -39,6 +39,15 @@ internal readonly unsafe struct StringTrieNode<TValue>
 
     #endregion Private 字段
 
+    #region Public 属性
+
+    /// <summary>
+    /// 当前节点的值
+    /// </summary>
+    public TValue Value => _value;
+
+    #endregion Public 属性
+
     #region Public 构造函数
 
     [Obsolete("must construction with data.", true)]
