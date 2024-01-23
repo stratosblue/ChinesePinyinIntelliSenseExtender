@@ -1,7 +1,6 @@
 ﻿#nullable enable
 #pragma warning disable VSTHRD010
 
-using System.Collections.ObjectModel;
 using System.Runtime.InteropServices;
 using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio;
@@ -73,14 +72,12 @@ internal class IdeographCompletionCommandHandler : IOleCommandTarget
             }
         }
 
-        ReadOnlyCollection<ICompletionSession>? completionSessions = null;
-
         if (nCmdID == (uint)VSConstants.VSStd2KCmdID.RETURN
             || nCmdID == (uint)VSConstants.VSStd2KCmdID.TAB
             || isTypedWhiteSpace
             || isTypedPunctuation)
         {
-            completionSessions ??= _completionBroker.GetSessions(_textView);
+            var completionSessions = _completionBroker.GetSessions(_textView);
             foreach (var completionSession in completionSessions)
             {
                 if (!completionSession.IsDismissed)
@@ -102,24 +99,7 @@ internal class IdeographCompletionCommandHandler : IOleCommandTarget
             }
         }
 
-        var result = _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
-
-        if (nCmdID == (uint)VSConstants.VSStd2KCmdID.BACKSPACE
-            || nCmdID == (uint)VSConstants.VSStd2KCmdID.DELETE)
-        {
-            completionSessions ??= _completionBroker.GetSessions(_textView);
-
-            foreach (var completionSession in completionSessions)
-            {
-                if (!completionSession.IsDismissed)
-                {
-                    completionSession.Filter();
-                }
-                return VSConstants.S_OK;
-            }
-        }
-
-        return result;
+        return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
     }
 
     public int QueryStatus(ref Guid pguidCmdGroup, uint cCmds, OLECMD[] prgCmds, IntPtr pCmdText) => _nextCommandHandler.QueryStatus(ref pguidCmdGroup, cCmds, prgCmds, pCmdText);
