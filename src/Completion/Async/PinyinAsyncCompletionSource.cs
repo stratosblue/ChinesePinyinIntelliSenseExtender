@@ -13,11 +13,10 @@ using Microsoft.VisualStudio.Imaging;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
-using Microsoft.VisualStudio.Utilities;
 
-namespace ChinesePinyinIntelliSenseExtender;
+namespace ChinesePinyinIntelliSenseExtender.Completion.Async;
 
-internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
+internal class PinyinAsyncCompletionSource : CompletionSourceBase, IAsyncCompletionSource
 {
     #region Private 字段
 
@@ -25,23 +24,16 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     private static readonly ImmutableArray<CompletionFilter> s_chineseFilters = ImmutableArray.Create(s_chineseFilter);
 
-    /// <summary>
-    /// <see cref="GetCompletionContextAsync(IAsyncCompletionSession, CompletionTrigger, SnapshotPoint, SnapshotSpan, CancellationToken)"/> 递归标记
-    /// </summary>
-    private static readonly AsyncLocal<bool> s_getCompletionContextRecursionTag = new();
-
-    private readonly GeneralOptions _options;
     private readonly IEnumerable<IAsyncCompletionSource> _otherAsyncCompletionSources;
-    private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
 
     #endregion Private 字段
 
     #region Public 构造函数
 
     public PinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
+        : base(options)
     {
         _otherAsyncCompletionSources = otherAsyncCompletionSources ?? throw new ArgumentNullException(nameof(otherAsyncCompletionSources));
-        _options = options ?? throw new ArgumentNullException(nameof(options));
     }
 
     #endregion Public 构造函数
@@ -50,21 +42,16 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     public async Task<CompletionContext?> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
-        if (s_getCompletionContextRecursionTag.Value
-            || !_options.Enable)
+        if (CanNotProcess())
         {
             return null;
         }
 
         try
         {
-            s_getCompletionContextRecursionTag.Value = true;
+            s_completionContextRecursionTag.Value = true;
 
-            if (_inputMethodDictionaryGroup is null
-                || _inputMethodDictionaryGroup.IsDisposed)
-            {
-                _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
-            }
+            var getInputMethodDictionaryGroupTask = GetInputMethodDictionaryGroupAsync();
 
             var tasks = _otherAsyncCompletionSources.Select(m => m.GetCompletionContextAsync(session, trigger, triggerLocation, applicableToSpan, token)).ToArray();
 
@@ -72,9 +59,16 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(_options.PreMatchType, _options.PreCheckRule);
+            Func<string, bool> shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
+
+            if (!allCompletionItems.Any())
+            {
+                return null;
+            }
+
+            var inputMethodDictionaryGroup = await getInputMethodDictionaryGroupTask;
 
             var count = tasks.Sum(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.Length : 0);
 
@@ -84,7 +78,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
                 int bufferIndex = 0;
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .ForAll(m => CreateCompletionItemWithConvertion(m, shouldProcessCheckDelegate, itemBuffer, ref bufferIndex));
+                                  .ForAll(m => CreateCompletionItemWithConvertion(m, inputMethodDictionaryGroup, shouldProcessCheckDelegate, itemBuffer, ref bufferIndex));
 
                 if (bufferIndex > 0)
                 {
@@ -99,7 +93,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         }
         finally
         {
-            s_getCompletionContextRecursionTag.Value = false;
+            s_completionContextRecursionTag.Value = false;
         }
     }
 
@@ -125,7 +119,7 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     #region impl
 
-    private void CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, Func<string, bool> shouldProcessCheck, CompletionItem[] itemBuffer, ref int bufferIndex)
+    private void CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, InputMethodDictionaryGroup inputMethodDictionaryGroup, Func<string, bool> shouldProcessCheck, CompletionItem[] itemBuffer, ref int bufferIndex)
     {
         var originInsertText = originCompletionItem.InsertText;
 
@@ -134,28 +128,28 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
             return;
         }
 
-        var spellings = _inputMethodDictionaryGroup!.FindAll(originInsertText);
+        var spellings = inputMethodDictionaryGroup.FindAll(originInsertText);
 
         if (spellings.Length == 0)
         {
             return;
         }
 
-        if (_options.EnableFSharpSupport
+        if (Options.EnableFSharpSupport
             && originCompletionItem.Properties.TryGetProperty("RoslynCompletionItemData", out object data)
             && TryGetRoslynItemNameInCode(data, out var nameInCode))
         {
             originInsertText = nameInCode!;
         }
 
-        if (_options.SingleWordsDisplay)
+        if (Options.SingleWordsDisplay)
         {
             foreach (var spelling in spellings)
             {
                 itemBuffer[Interlocked.Increment(ref bufferIndex) - 1] = CreateCompletionItem(originCompletionItem, originInsertText, spelling);
             }
         }
-        else if (_options.EnableMultipleSpellings)
+        else if (Options.EnableMultipleSpellings)
         {
             itemBuffer[Interlocked.Increment(ref bufferIndex) - 1] = CreateCompletionItem(originCompletionItem, originInsertText, string.Join("/", spellings));
         }
@@ -169,11 +163,11 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
 
     private CompletionItem CreateCompletionItem(CompletionItem originCompletionItem, string originInsertText, string spelling)
     {
-        var newCompletionItem = new CompletionItem(displayText: Format(_options.DisplayTextFormat, originCompletionItem.DisplayText, spelling),
+        var newCompletionItem = new CompletionItem(displayText: FormatString(Options.DisplayTextFormat, originCompletionItem.DisplayText, spelling),
                                                    source: this,
                                                    icon: originCompletionItem.Icon,
                                                    filters: s_chineseFilters,
-                                                   suffix: Format(_options.DisplaySuffixFormat, originCompletionItem.Suffix, spelling),
+                                                   suffix: FormatString(Options.DisplaySuffixFormat, originCompletionItem.Suffix, spelling),
                                                    insertText: originInsertText,
                                                    sortText: spelling,
                                                    filterText: spelling,
@@ -187,23 +181,6 @@ internal class PinyinAsyncCompletionSource : IAsyncCompletionSource
         newCompletionItem.Properties.AddProperty(this, originCompletionItem);
 
         return newCompletionItem;
-
-        static string Format(string? format, string origin, string spellings)
-        {
-            if (string.IsNullOrEmpty(format))
-            {
-                return origin;
-            }
-            var builder = PooledStringBuilder.GetInstance();
-            try
-            {
-                return builder.Builder.AppendFormat(format, origin, spellings).ToString();
-            }
-            finally
-            {
-                builder.Free();
-            }
-        }
     }
 
     #endregion CreateCompletionItem

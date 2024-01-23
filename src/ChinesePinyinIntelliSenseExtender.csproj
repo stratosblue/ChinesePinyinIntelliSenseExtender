@@ -70,6 +70,8 @@
     </Compile>
     <Compile Include="Options\OptionPages.cs" />
     <Compile Include="Options\Model\GeneralOptions.cs" />
+    <Compile Include="Completion\CompletionSourceBase.cs" />
+    <Compile Include="Completion\CompletionSourceProviderBase.cs" />
     <Compile Include="Ref\InputMethodDictionary\InputMethodDictionaryUtilities.cs" />
     <Compile Include="Ref\InputMethodDictionary\InputMethodReverseDictionary.cs" />
     <Compile Include="Ref\InputMethodDictionary\ITextAdjuster.cs" />
@@ -98,8 +100,8 @@
     <Compile Include="Usings.cs" />
     <Compile Include="Util\StringPreMatchUtil.cs" />
     <Compile Include="Util\InputMethodDictionaryLoader.cs" />
-    <Compile Include="PinyinAsyncCompletionSource.cs" />
-    <Compile Include="PinyinAsyncCompletionSourceProvider.cs" />
+    <Compile Include="Completion\Async\PinyinAsyncCompletionSource.cs" />
+    <Compile Include="Completion\Async\PinyinAsyncCompletionSourceProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Util\ChineseCheckUtil.cs" />
     <Compile Include="ObjectBoolean.cs" />
