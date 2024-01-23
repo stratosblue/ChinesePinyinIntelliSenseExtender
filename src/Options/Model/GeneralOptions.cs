@@ -31,6 +31,12 @@ internal class GeneralOptions : Options<GeneralOptions>
     public bool EnableMultipleSpellings { get; set; } = true;
 
     [Category("基础")]
+    [DisplayName("启用同步完成支持（实验）")]
+    [Description("是否启用对同步完成的实验性支持，如：C++")]
+    [DefaultValue(true)]
+    public bool EnableSyncCompletionSupport { get; set; } = true;
+
+    [Category("基础")]
     [DisplayName("排除的文件拓展名")]
     [Description("多个拓展名使用 \";\" 进行分割，如 \"cs;js\"（修改仅对新开启标签页生效）")]
     [DefaultValue("")]
@@ -73,6 +79,12 @@ internal class GeneralOptions : Options<GeneralOptions>
     [Description("对于多音字/多字典的条目，每个匹配项在完成列表中展示为单独项。")]
     [DefaultValue(true)]
     public bool SingleWordsDisplay { get; set; } = true;
+
+    [Category("展示")]
+    [DisplayName("同步完成的DisplayText展示格式")]
+    [Description("参数 {0} 为拼写文本，参数 {1} 为原 DisplayText (置空则展示拼写文本，务必保证 {0} 在文本头部，否则可能无法匹配)")]
+    [DefaultValue("{0} [{1}]")]
+    public string? SyncCompletionDisplayTextFormat { get; set; } = "{0} [{1}]";
 
     #endregion 展示
 

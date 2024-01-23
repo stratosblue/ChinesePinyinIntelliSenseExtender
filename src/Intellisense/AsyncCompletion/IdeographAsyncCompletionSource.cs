@@ -14,13 +14,13 @@ using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 
-namespace ChinesePinyinIntelliSenseExtender.Completion.Async;
+namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 
-internal class PinyinAsyncCompletionSource : CompletionSourceBase, IAsyncCompletionSource
+internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncCompletionSource
 {
     #region Private 字段
 
-    private static readonly CompletionFilter s_chineseFilter = new("中文代码", "C", new(KnownMonikers.Attribute.ToImageId(), "中文代码"));
+    private static readonly CompletionFilter s_chineseFilter = new("表意文字代码", "C", new(KnownMonikers.Attribute.ToImageId(), "表意文字代码"));
 
     private static readonly ImmutableArray<CompletionFilter> s_chineseFilters = ImmutableArray.Create(s_chineseFilter);
 
@@ -30,7 +30,7 @@ internal class PinyinAsyncCompletionSource : CompletionSourceBase, IAsyncComplet
 
     #region Public 构造函数
 
-    public PinyinAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
+    public IdeographAsyncCompletionSource(IEnumerable<IAsyncCompletionSource> otherAsyncCompletionSources, GeneralOptions options)
         : base(options)
     {
         _otherAsyncCompletionSources = otherAsyncCompletionSources ?? throw new ArgumentNullException(nameof(otherAsyncCompletionSources));
@@ -42,7 +42,8 @@ internal class PinyinAsyncCompletionSource : CompletionSourceBase, IAsyncComplet
 
     public async Task<CompletionContext?> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
-        if (CanNotProcess())
+        if (s_completionContextRecursionTag.Value
+            || !Options.Enable)
         {
             return null;
         }
@@ -59,7 +60,7 @@ internal class PinyinAsyncCompletionSource : CompletionSourceBase, IAsyncComplet
 
             token.ThrowIfCancellationRequested();
 
-            Func<string, bool> shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
+            var shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 

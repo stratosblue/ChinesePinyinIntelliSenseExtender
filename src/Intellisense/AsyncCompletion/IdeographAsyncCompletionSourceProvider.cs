@@ -4,20 +4,18 @@ using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading;
 
-using ChinesePinyinIntelliSenseExtender.Options;
-
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
 
-namespace ChinesePinyinIntelliSenseExtender.Completion.Async;
+namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 
 [Export(typeof(IAsyncCompletionSourceProvider))]
-[Name("中文代码拼音补全")]
+[Name("表意文字表音补全")]
 [ContentType("text")]
-internal class PinyinAsyncCompletionSourceProvider : CompletionSourceProviderBase<ITextView, IAsyncCompletionSource>, IAsyncCompletionSourceProvider
+internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProviderBase<ITextView, IAsyncCompletionSource>, IAsyncCompletionSourceProvider
 {
     #region Private 字段
 
@@ -27,6 +25,15 @@ internal class PinyinAsyncCompletionSourceProvider : CompletionSourceProviderBas
     #endregion Private 字段
 
     #region Public 方法
+
+    public IAsyncCompletionSource GetOrCreate(ITextView textView)
+    {
+        return GetOrCreateCompletionSource(textView);
+    }
+
+    #endregion Public 方法
+
+    #region Protected 方法
 
     protected override IAsyncCompletionSource CreateCompletionSource(ITextView dependence)
     {
@@ -50,7 +57,7 @@ internal class PinyinAsyncCompletionSourceProvider : CompletionSourceProviderBas
 
         IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
                                                   ? EmptyAsyncCompletionSource.Instance
-                                                  : new PinyinAsyncCompletionSource(otherAsyncCompletionSources!, Options);
+                                                  : new IdeographAsyncCompletionSource(otherAsyncCompletionSources!, Options);
 
         return completionSource;
     }
@@ -69,11 +76,11 @@ internal class PinyinAsyncCompletionSourceProvider : CompletionSourceProviderBas
         return EmptyAsyncCompletionSource.Instance;
     }
 
-    #endregion Public 方法
+    #endregion Protected 方法
 
     #region Private 类
 
-    private class EmptyAsyncCompletionSource : IAsyncCompletionSource
+    private sealed class EmptyAsyncCompletionSource : IAsyncCompletionSource
     {
         #region Public 属性
 

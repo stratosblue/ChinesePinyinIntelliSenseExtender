@@ -6,7 +6,7 @@ using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
 using Microsoft.VisualStudio.Utilities;
 
-namespace ChinesePinyinIntelliSenseExtender.Completion;
+namespace ChinesePinyinIntelliSenseExtender.Intellisense;
 
 internal abstract class CompletionSourceBase
 {
@@ -38,27 +38,21 @@ internal abstract class CompletionSourceBase
 
     #region Protected 方法
 
-    protected static string FormatString(string? format, string origin, string spellings)
+    protected static string FormatString(string? format, string param0, string param1)
     {
         if (string.IsNullOrEmpty(format))
         {
-            return origin;
+            return param0;
         }
         var builder = PooledStringBuilder.GetInstance();
         try
         {
-            return builder.Builder.AppendFormat(format, origin, spellings).ToString();
+            return builder.Builder.AppendFormat(format, param0, param1).ToString();
         }
         finally
         {
             builder.Free();
         }
-    }
-
-    protected bool CanNotProcess()
-    {
-        return s_completionContextRecursionTag.Value
-               || !Options.Enable;
     }
 
     protected InputMethodDictionaryGroup GetInputMethodDictionaryGroup()

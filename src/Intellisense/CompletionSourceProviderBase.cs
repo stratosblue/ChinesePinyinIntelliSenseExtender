@@ -5,11 +5,12 @@ using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading;
-using ChinesePinyinIntelliSenseExtender.Completion.Async;
+using ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
+using ChinesePinyinIntelliSenseExtender.Intellisense.SyncCompletion;
 using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio.Utilities;
 
-namespace ChinesePinyinIntelliSenseExtender.Completion;
+namespace ChinesePinyinIntelliSenseExtender.Intellisense;
 
 internal abstract class CompletionSourceProviderBase<TCompletionSourceDependence, TCompletionSource> where TCompletionSourceDependence : class where TCompletionSource : class
 {
@@ -43,49 +44,12 @@ internal abstract class CompletionSourceProviderBase<TCompletionSourceDependence
 
     static CompletionSourceProviderBase()
     {
-        s_providerContentTypeCache.TryAdd(typeof(PinyinAsyncCompletionSourceProvider), Array.Empty<string>());
+        s_providerContentTypeCache.TryAdd(typeof(IdeographAsyncCompletionSourceProvider), Array.Empty<string>());
+        s_providerContentTypeCache.TryAdd(typeof(IdeographCompletionSourceProvider), Array.Empty<string>());
+
     }
 
     #endregion Public 构造函数
-
-    #region Public 方法
-
-    public virtual TCompletionSource GetOrCreate(TCompletionSourceDependence dependence)
-    {
-        if (s_recursionTag.Value)
-        {
-            Debug.WriteLine("Recursion call. Return EmptyAsyncCompletionSource.");
-            return GetDefaultCompletionSource(dependence);
-        }
-        s_recursionTag.Value = true;
-
-        try
-        {
-            if (_completionSourceCache.TryGetValue(dependence, out var itemSource))
-            {
-                Debug.WriteLine($"CompletionSource cache hit by {dependence}.");
-                return itemSource;
-            }
-            Debug.WriteLine($"No completionSource cache for {dependence}.");
-
-            if (CheckShouldIgnore(dependence))
-            {
-                return GetDefaultCompletionSource(dependence);
-            }
-
-            var completionSource = CreateCompletionSource(dependence);
-
-            _completionSourceCache.TryAdd(dependence, completionSource);
-
-            return completionSource;
-        }
-        finally
-        {
-            s_recursionTag.Value = false;
-        }
-    }
-
-    #endregion Public 方法
 
     #region Protected 方法
 
@@ -134,6 +98,41 @@ internal abstract class CompletionSourceProviderBase<TCompletionSourceDependence
     protected abstract string? GetCurrentEditFilePath(TCompletionSourceDependence dependence);
 
     protected abstract TCompletionSource GetDefaultCompletionSource(TCompletionSourceDependence dependence);
+
+    protected virtual TCompletionSource GetOrCreateCompletionSource(TCompletionSourceDependence dependence)
+    {
+        if (s_recursionTag.Value)
+        {
+            Debug.WriteLine("Recursion call. Return EmptyAsyncCompletionSource.");
+            return GetDefaultCompletionSource(dependence);
+        }
+        s_recursionTag.Value = true;
+
+        try
+        {
+            if (_completionSourceCache.TryGetValue(dependence, out var itemSource))
+            {
+                Debug.WriteLine($"CompletionSource cache hit by {dependence}.");
+                return itemSource;
+            }
+            Debug.WriteLine($"No completionSource cache for {dependence}.");
+
+            if (CheckShouldIgnore(dependence))
+            {
+                return GetDefaultCompletionSource(dependence);
+            }
+
+            var completionSource = CreateCompletionSource(dependence);
+
+            _completionSourceCache.TryAdd(dependence, completionSource);
+
+            return completionSource;
+        }
+        finally
+        {
+            s_recursionTag.Value = false;
+        }
+    }
 
     #endregion Protected 方法
 }
