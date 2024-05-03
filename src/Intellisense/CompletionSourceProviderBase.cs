@@ -46,7 +46,6 @@ internal abstract class CompletionSourceProviderBase<TCompletionSourceDependence
     {
         s_providerContentTypeCache.TryAdd(typeof(IdeographAsyncCompletionSourceProvider), Array.Empty<string>());
         s_providerContentTypeCache.TryAdd(typeof(IdeographCompletionSourceProvider), Array.Empty<string>());
-
     }
 
     #endregion Public 构造函数

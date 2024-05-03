@@ -57,6 +57,7 @@
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletionSourceProvider.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletionCommandHandler.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletionHandlerProvider.cs" />
+    <Compile Include="Intellisense\SyncCompletion\InnerIdeographCompletionSet.cs" />
     <Compile Include="Internal\ArrayBaseEnumerator.cs" />
     <Compile Include="Options\DictionaryCombinationCreateForm.cs">
       <SubType>Form</SubType>
@@ -107,6 +108,8 @@
     <Compile Include="Ref\StringTrie\UnsafePooledIncrementalContainer.cs" />
     <Compile Include="Ref\StringTrie\ValueRef.cs" />
     <Compile Include="Usings.cs" />
+    <Compile Include="Util\CompletionSetSelectBestMatchHelper.cs" />
+    <Compile Include="Util\InputTextMatchHelper.cs" />
     <Compile Include="Util\StringPreMatchUtil.cs" />
     <Compile Include="Util\InputMethodDictionaryLoader.cs" />
     <Compile Include="Intellisense\AsyncCompletion\IdeographAsyncCompletionSource.cs" />
