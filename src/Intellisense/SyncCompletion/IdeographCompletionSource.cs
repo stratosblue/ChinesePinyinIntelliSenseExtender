@@ -51,7 +51,7 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
                 {
                     foreach (var completion in allCompletions)
                     {
-                        itemBuffer[bufferIndex++] = CloneCompletion(completion);
+                        itemBuffer[bufferIndex++] = completion;
                     }
 
                     var processedCompletionSet = CreateNewCompletionSet(completionSet, new ArrayBaseEnumerator<Completion>(itemBuffer, 0, bufferIndex));
@@ -84,19 +84,6 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
         {
             return new IdeographCompletionSet(completionSet.Moniker, completionSet.DisplayName, completionSet.ApplicableTo, completions, completionSet.CompletionBuilders);
         }
-    }
-
-    private Completion CloneCompletion(Completion originCompletion)
-    {
-        return originCompletion switch
-        {
-            Completion4 completion4 => completion4.Suffix?.Length > 0
-                                       ? new IdeographCompletion4(displayText: completion4.DisplayText, suffix: completion4.Suffix, matchText: null, origin: completion4)
-                                       : new IdeographCompletion4(displayText: completion4.DisplayText, matchText: null, origin: completion4),
-            Completion3 completion3 => new IdeographCompletion3(displayText: completion3.DisplayText, matchText: null, origin: completion3),
-            Completion2 completion2 => new IdeographCompletion2(displayText: completion2.DisplayText, matchText: null, origin: completion2),
-            _ => new IdeographCompletion(displayText: originCompletion.DisplayText, matchText: null, origin: originCompletion),
-        };
     }
 
     private Completion CreateCompletion(Completion originCompletion, string originInsertText, string spelling)

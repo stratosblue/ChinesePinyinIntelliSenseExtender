@@ -12,7 +12,7 @@ internal interface IIdeographCompletion
     /// <summary>
     /// 匹配文本
     /// </summary>
-    string? MatchText { get; }
+    string MatchText { get; }
 
     #endregion Public 属性
 }

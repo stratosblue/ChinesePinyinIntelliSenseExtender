@@ -27,7 +27,7 @@ internal class IdeographCompletion : Completion, IIdeographCompletion
 
     public override string InsertionText { get => _origin.InsertionText; set => _origin.InsertionText = value; }
 
-    public string? MatchText { get; }
+    public string MatchText { get; }
 
     public override PropertyCollection Properties => _origin.Properties;
 
@@ -35,7 +35,7 @@ internal class IdeographCompletion : Completion, IIdeographCompletion
 
     #region Public 构造函数
 
-    public IdeographCompletion(string displayText, string? matchText, Completion origin)
+    public IdeographCompletion(string displayText, string matchText, Completion origin)
     {
         DisplayText = displayText;
         MatchText = matchText;
@@ -66,7 +66,7 @@ internal class IdeographCompletion2 : Completion2, IIdeographCompletion
 
     public override string InsertionText { get => _origin.InsertionText; set => _origin.InsertionText = value; }
 
-    public string? MatchText { get; }
+    public string MatchText { get; }
 
     public override PropertyCollection Properties => _origin.Properties;
 
@@ -74,7 +74,7 @@ internal class IdeographCompletion2 : Completion2, IIdeographCompletion
 
     #region Public 构造函数
 
-    public IdeographCompletion2(string displayText, string? matchText, Completion2 origin)
+    public IdeographCompletion2(string displayText, string matchText, Completion2 origin)
     {
         DisplayText = displayText;
         MatchText = matchText;
@@ -107,7 +107,7 @@ internal class IdeographCompletion3 : Completion3, IIdeographCompletion
 
     public override string InsertionText { get => _origin.InsertionText; set => _origin.InsertionText = value; }
 
-    public string? MatchText { get; }
+    public string MatchText { get; }
 
     public override PropertyCollection Properties => _origin.Properties;
 
@@ -115,7 +115,7 @@ internal class IdeographCompletion3 : Completion3, IIdeographCompletion
 
     #region Public 构造函数
 
-    public IdeographCompletion3(string displayText, string? matchText, Completion3 origin)
+    public IdeographCompletion3(string displayText, string matchText, Completion3 origin)
     {
         DisplayText = displayText;
         MatchText = matchText;
@@ -148,7 +148,7 @@ internal class IdeographCompletion4 : Completion4, IIdeographCompletion
 
     public override string InsertionText { get => _origin.InsertionText; set => _origin.InsertionText = value; }
 
-    public string? MatchText { get; }
+    public string MatchText { get; }
 
     public override PropertyCollection Properties => _origin.Properties;
 
@@ -156,7 +156,7 @@ internal class IdeographCompletion4 : Completion4, IIdeographCompletion
 
     #region Public 构造函数
 
-    public IdeographCompletion4(string displayText, string suffix, string? matchText, Completion4 origin)
+    public IdeographCompletion4(string displayText, string suffix, string matchText, Completion4 origin)
         : base(displayText: null, insertionText: null, description: null, iconMoniker: default, suffix: suffix)
     {
         DisplayText = displayText;
@@ -164,7 +164,7 @@ internal class IdeographCompletion4 : Completion4, IIdeographCompletion
         _origin = origin;
     }
 
-    public IdeographCompletion4(string displayText, string? matchText, Completion4 origin)
+    public IdeographCompletion4(string displayText, string matchText, Completion4 origin)
     {
         DisplayText = displayText;
         MatchText = matchText;
