@@ -51,7 +51,9 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
                 {
                     foreach (var completion in allCompletions)
                     {
-                        itemBuffer[bufferIndex++] = completion;
+                        //暂时必须克隆完成项，使用之前的完成项会导致显示与实际插入不同的问题，暂未寻找解决方案
+                        //克隆目前会导致特殊输入失效，如 <新建事件> ，暂未寻找解决方案
+                        itemBuffer[bufferIndex++] = CloneCompletion(completion);
                     }
 
                     var processedCompletionSet = CreateNewCompletionSet(completionSet, new ArrayBaseEnumerator<Completion>(itemBuffer, 0, bufferIndex));
@@ -86,6 +88,19 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
         }
     }
 
+    private Completion CloneCompletion(Completion originCompletion)
+    {
+        return originCompletion switch
+        {
+            Completion4 completion4 => completion4.Suffix?.Length > 0
+                                       ? new IdeographCompletion4(displayText: completion4.DisplayText, suffix: completion4.Suffix, origin: completion4)
+                                       : new IdeographCompletion4(displayText: completion4.DisplayText, origin: completion4),
+            Completion3 completion3 => new IdeographCompletion3(displayText: completion3.DisplayText, origin: completion3),
+            Completion2 completion2 => new IdeographCompletion2(displayText: completion2.DisplayText, origin: completion2),
+            _ => new IdeographCompletion(displayText: originCompletion.DisplayText, origin: originCompletion),
+        };
+    }
+
     private Completion CreateCompletion(Completion originCompletion, string originInsertText, string spelling)
     {
         var displayText = FormatString(Options.SyncCompletionDisplayTextFormat, spelling, originInsertText);
@@ -93,11 +108,11 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
         return originCompletion switch
         {
             Completion4 completion4 => completion4.Suffix?.Length > 0
-                                       ? new IdeographCompletion4(displayText: displayText, suffix: completion4.Suffix, matchText: spelling, origin: completion4)
-                                       : new IdeographCompletion4(displayText: displayText, matchText: spelling, origin: completion4),
-            Completion3 completion3 => new IdeographCompletion3(displayText: displayText, matchText: spelling, origin: completion3),
-            Completion2 completion2 => new IdeographCompletion2(displayText: displayText, matchText: spelling, origin: completion2),
-            _ => new IdeographCompletion(displayText: displayText, matchText: spelling, origin: originCompletion),
+                                       ? new IdeographMatchableCompletion4(displayText: displayText, suffix: completion4.Suffix, matchText: spelling, origin: completion4)
+                                       : new IdeographMatchableCompletion4(displayText: displayText, matchText: spelling, origin: completion4),
+            Completion3 completion3 => new IdeographMatchableCompletion3(displayText: displayText, matchText: spelling, origin: completion3),
+            Completion2 completion2 => new IdeographMatchableCompletion2(displayText: displayText, matchText: spelling, origin: completion2),
+            _ => new IdeographMatchableCompletion(displayText: displayText, matchText: spelling, origin: originCompletion),
         };
     }
 

@@ -29,8 +29,8 @@ internal static class CompletionSetSelectBestMatchHelper
 
         foreach (var completion in completionList)
         {
-            var currentMatchText = completion is IIdeographCompletion ideographCompletion
-                                   ? ideographCompletion.MatchText
+            var currentMatchText = completion is IIdeographMatchableCompletion ideographMatchableCompletion
+                                   ? ideographMatchableCompletion.MatchText
                                    : completion.DisplayText;
 
             if (string.IsNullOrEmpty(currentMatchText)
@@ -80,11 +80,11 @@ internal static class CompletionSetSelectBestMatchHelper
     public static CompletionSelectionStatus SelectSelectionStatus(CompletionSelectionStatus compareSelectionStatus, CompletionSelectionStatus baseSelectionStatus, string inputText)
     {
         if (baseSelectionStatus?.Completion is not { } baseSelectedCompletion
-            || compareSelectionStatus.Completion is not IIdeographCompletion compareSelectedCompletion)    //基类未选择
+            || compareSelectionStatus.Completion is not IIdeographMatchableCompletion compareSelectedCompletion)    //基类未选择
         {
             return compareSelectionStatus;
         }
-        if (baseSelectedCompletion is IIdeographCompletion) //基类选择了 IIdeographCompletion
+        if (baseSelectedCompletion is IIdeographMatchableCompletion) //基类选择了 IIdeographMatchableCompletion
         {
             return compareSelectionStatus;
         }

@@ -67,10 +67,10 @@ internal sealed class InnerIdeographCompletionSet : IIdeographCompletionSet
 
     private bool DoesCompletionMatchApplicabilityText(Completion completion, string inputText)
     {
-        if (completion is IIdeographCompletion ideographCompletion
-            && ideographCompletion.MatchText is not null)
+        if (completion is IIdeographMatchableCompletion ideographMatchableCompletion
+            && ideographMatchableCompletion.MatchText is not null)
         {
-            return InputTextMatchHelper.CalculateMatchScore(inputText, ideographCompletion.MatchText, out _) > 0;
+            return InputTextMatchHelper.CalculateMatchScore(inputText, ideographMatchableCompletion.MatchText, out _) > 0;
         }
         else
         {

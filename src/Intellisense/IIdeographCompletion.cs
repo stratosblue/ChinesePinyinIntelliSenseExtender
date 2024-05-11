@@ -3,9 +3,16 @@
 namespace ChinesePinyinIntelliSenseExtender.Intellisense;
 
 /// <summary>
-/// 表意文字完成
+/// 表意文字完成项
 /// </summary>
 internal interface IIdeographCompletion
+{
+}
+
+/// <summary>
+/// 表意文字可匹配完成项
+/// </summary>
+internal interface IIdeographMatchableCompletion : IIdeographCompletion
 {
     #region Public 属性
 
