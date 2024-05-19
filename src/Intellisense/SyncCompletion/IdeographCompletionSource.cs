@@ -90,30 +90,60 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
 
     private Completion CloneCompletion(Completion originCompletion)
     {
-        return originCompletion switch
+        if (originCompletion is ICustomCommit customCommitter)
         {
-            Completion4 completion4 => completion4.Suffix?.Length > 0
-                                       ? new IdeographCompletion4(displayText: completion4.DisplayText, suffix: completion4.Suffix, origin: completion4)
-                                       : new IdeographCompletion4(displayText: completion4.DisplayText, origin: completion4),
-            Completion3 completion3 => new IdeographCompletion3(displayText: completion3.DisplayText, origin: completion3),
-            Completion2 completion2 => new IdeographCompletion2(displayText: completion2.DisplayText, origin: completion2),
-            _ => new IdeographCompletion(displayText: originCompletion.DisplayText, origin: originCompletion),
-        };
+            return originCompletion switch
+            {
+                Completion4 completion4 => completion4.Suffix?.Length > 0
+                                           ? new IdeographCustomCommitCompletion4(displayText: completion4.DisplayText, suffix: completion4.Suffix, origin: completion4, customCommitter: customCommitter)
+                                           : new IdeographCustomCommitCompletion4(displayText: completion4.DisplayText, origin: completion4, customCommitter: customCommitter),
+                Completion3 completion3 => new IdeographCustomCommitCompletion3(displayText: completion3.DisplayText, origin: completion3, customCommitter: customCommitter),
+                Completion2 completion2 => new IdeographCustomCommitCompletion2(displayText: completion2.DisplayText, origin: completion2, customCommitter: customCommitter),
+                _ => new IdeographCustomCommitCompletion(displayText: originCompletion.DisplayText, origin: originCompletion, customCommitter: customCommitter),
+            };
+        }
+        else
+        {
+            return originCompletion switch
+            {
+                Completion4 completion4 => completion4.Suffix?.Length > 0
+                                           ? new IdeographCompletion4(displayText: completion4.DisplayText, suffix: completion4.Suffix, origin: completion4)
+                                           : new IdeographCompletion4(displayText: completion4.DisplayText, origin: completion4),
+                Completion3 completion3 => new IdeographCompletion3(displayText: completion3.DisplayText, origin: completion3),
+                Completion2 completion2 => new IdeographCompletion2(displayText: completion2.DisplayText, origin: completion2),
+                _ => new IdeographCompletion(displayText: originCompletion.DisplayText, origin: originCompletion),
+            };
+        }
     }
 
     private Completion CreateCompletion(Completion originCompletion, string originInsertText, string spelling)
     {
         var displayText = FormatString(Options.SyncCompletionDisplayTextFormat, spelling, originInsertText);
 
-        return originCompletion switch
+        if (originCompletion is ICustomCommit customCommitter)
         {
-            Completion4 completion4 => completion4.Suffix?.Length > 0
-                                       ? new IdeographMatchableCompletion4(displayText: displayText, suffix: completion4.Suffix, matchText: spelling, origin: completion4)
-                                       : new IdeographMatchableCompletion4(displayText: displayText, matchText: spelling, origin: completion4),
-            Completion3 completion3 => new IdeographMatchableCompletion3(displayText: displayText, matchText: spelling, origin: completion3),
-            Completion2 completion2 => new IdeographMatchableCompletion2(displayText: displayText, matchText: spelling, origin: completion2),
-            _ => new IdeographMatchableCompletion(displayText: displayText, matchText: spelling, origin: originCompletion),
-        };
+            return originCompletion switch
+            {
+                Completion4 completion4 => completion4.Suffix?.Length > 0
+                                           ? new IdeographMatchableCustomCommitCompletion4(displayText: displayText, suffix: completion4.Suffix, matchText: spelling, origin: completion4, customCommitter: customCommitter)
+                                           : new IdeographMatchableCustomCommitCompletion4(displayText: displayText, matchText: spelling, origin: completion4, customCommitter: customCommitter),
+                Completion3 completion3 => new IdeographMatchableCustomCommitCompletion3(displayText: displayText, matchText: spelling, origin: completion3, customCommitter: customCommitter),
+                Completion2 completion2 => new IdeographMatchableCustomCommitCompletion2(displayText: displayText, matchText: spelling, origin: completion2, customCommitter: customCommitter),
+                _ => new IdeographMatchableCustomCommitCompletion(displayText: displayText, matchText: spelling, origin: originCompletion, customCommitter: customCommitter),
+            };
+        }
+        else
+        {
+            return originCompletion switch
+            {
+                Completion4 completion4 => completion4.Suffix?.Length > 0
+                                           ? new IdeographMatchableCompletion4(displayText: displayText, suffix: completion4.Suffix, matchText: spelling, origin: completion4)
+                                           : new IdeographMatchableCompletion4(displayText: displayText, matchText: spelling, origin: completion4),
+                Completion3 completion3 => new IdeographMatchableCompletion3(displayText: displayText, matchText: spelling, origin: completion3),
+                Completion2 completion2 => new IdeographMatchableCompletion2(displayText: displayText, matchText: spelling, origin: completion2),
+                _ => new IdeographMatchableCompletion(displayText: displayText, matchText: spelling, origin: originCompletion),
+            };
+        }
     }
 
     private void CreateCompletionWithConvertion(Completion originCompletion, InputMethodDictionaryGroup inputMethodDictionaryGroup, Func<string, bool> shouldProcessCheck, Completion[] itemBuffer, ref int bufferIndex)

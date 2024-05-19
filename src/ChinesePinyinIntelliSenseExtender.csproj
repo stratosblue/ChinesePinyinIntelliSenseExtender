@@ -50,6 +50,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Intellisense\IIdeographCompletionSet.cs" />
+    <Compile Include="Intellisense\SyncCompletion\IdeographCustomCommitCompletions.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletionSets.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletions.cs" />
     <Compile Include="Intellisense\IIdeographCompletion.cs" />
