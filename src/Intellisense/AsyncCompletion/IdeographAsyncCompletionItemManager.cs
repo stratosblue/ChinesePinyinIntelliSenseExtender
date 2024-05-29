@@ -1,7 +1,7 @@
 ﻿#nullable enable
 
+using System.Collections.Concurrent;
 using System.Collections.Immutable;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
@@ -20,6 +20,38 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
     //    await s.WriteLineAsync($"[{DateTime.Now}] {n}: {t} ({msg})");
     //}
 
+    private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
+    private readonly ConcurrentDictionary<(PreMatchType, StringPreCheckRule, string), string> _cache = [];
+    private GeneralOptions Options => GeneralOptions.Instance;
+
+    private async Task<InputMethodDictionaryGroup> GetInputMethodDictionaryGroupAsync()
+    {
+        if (_inputMethodDictionaryGroup is null
+            || _inputMethodDictionaryGroup.IsDisposed)
+        {
+            _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
+        }
+        return _inputMethodDictionaryGroup;
+    }
+
+    private string GetFilterText(string t, IPreCheckPredicate shouldProcessChecker, InputMethodDictionaryGroup inputMethodDictionaryGroup)
+    {
+        var key = (Options.PreMatchType, Options.PreCheckRule, t);
+
+        if (_cache.TryGetValue(key, out var r)) return r;
+        if (!shouldProcessChecker.Check(t)) AddToCacheAndReturn(t);
+
+        var spellings = inputMethodDictionaryGroup.FindAll(t);
+        var res = Options.EnableMultipleSpellings ? string.Join("/", spellings) : spellings[0];
+        return AddToCacheAndReturn($"{t}/{res}");
+
+        string AddToCacheAndReturn(string v)
+        {
+            _cache.TryAdd(key, v);
+            return v;
+        }
+    }
+
     public Task<ImmutableArray<CompletionItem>> SortCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionInitialDataSnapshot data, CancellationToken token)
     {
         //var st = ValueStopwatch.StartNew();
@@ -30,17 +62,6 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         return Task.FromResult(sortedItems);
     }
 
-    private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
-    private ConditionalWeakTable<string, string> _cache = new();
-    protected async Task<InputMethodDictionaryGroup> GetInputMethodDictionaryGroupAsync()
-    {
-        if (_inputMethodDictionaryGroup is null
-            || _inputMethodDictionaryGroup.IsDisposed)
-        {
-            _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
-        }
-        return _inputMethodDictionaryGroup;
-    }
     public async Task<FilteredCompletionModel> UpdateCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionDataSnapshot data, CancellationToken token)
     {
         //var st = ValueStopwatch.StartNew();
@@ -67,21 +88,6 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         var Options = GeneralOptions.Instance;
         var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
         var inputMethodDictionaryGroup = await GetInputMethodDictionaryGroupAsync();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        string getFilterText(string t)
-        {
-            if (_cache.TryGetValue(t, out var r)) return r;
-            if (!shouldProcessChecker.Check(t))
-            {
-                _cache.Add(t, t);
-                return t;
-            }
-            var spellings = inputMethodDictionaryGroup.FindAll(t);
-            var res = Options.EnableMultipleSpellings ? string.Join("/", spellings) : spellings[0];
-            string v = $"{t}/{res}";
-            _cache.Add(t, v);
-            return v;
-        }
 
         // Pattern matcher not only filters, but also provides a way to order the results by their match quality.
         // The relevant CompletionItem is match.Item1, its PatternMatch is match.Item2
@@ -91,10 +97,10 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
 
         var matches = data.InitialSortedList
             // Perform pattern matching
-            // Pick only items that were matched, unless length of filter text is 1
             .ParallelChoose(completionItem =>
             {
-                var n = patternMatcher.TryMatch(getFilterText(completionItem.FilterText));
+                var n = patternMatcher.TryMatch(GetFilterText(completionItem.FilterText, shouldProcessChecker, inputMethodDictionaryGroup));
+                // Pick only items that were matched, unless length of filter text is 1
                 return (filterText.Length == 1 || n.HasValue, (completionItem, n));
             })
             .ToArray();
