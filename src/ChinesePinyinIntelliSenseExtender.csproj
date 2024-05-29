@@ -49,6 +49,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Intellisense\AsyncCompletion\IdeographAsyncCompletionItemManager.cs" />
+    <Compile Include="Intellisense\AsyncCompletion\IdeographAsyncCompletionItemManagerProvider.cs" />
     <Compile Include="Intellisense\IIdeographCompletionSet.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCustomCommitCompletions.cs" />
     <Compile Include="Intellisense\SyncCompletion\IdeographCompletionSets.cs" />
@@ -110,6 +112,7 @@
     <Compile Include="Ref\StringTrie\ValueRef.cs" />
     <Compile Include="Usings.cs" />
     <Compile Include="Util\CompletionSetSelectBestMatchHelper.cs" />
+    <Compile Include="Util\EnumerableExtend.cs" />
     <Compile Include="Util\InputTextMatchHelper.cs" />
     <Compile Include="Util\StringPreMatchUtil.cs" />
     <Compile Include="Util\InputMethodDictionaryLoader.cs" />
@@ -122,6 +125,7 @@
     <Compile Include="Util\ConditionalWeakTableExtensions.cs" />
     <Compile Include="Util\InputMethodDictionaryGroup.cs" />
     <Compile Include="Util\InputMethodDictionaryGroupProvider.cs" />
+    <Compile Include="Util\ValueStopwatch.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="..\third\rime-pinyin-simp\pinyin_simp.dict.yaml">

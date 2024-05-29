@@ -44,7 +44,7 @@ internal abstract class CompletionSourceProviderBase<TCompletionSourceDependence
 
     static CompletionSourceProviderBase()
     {
-        s_providerContentTypeCache.TryAdd(typeof(IdeographAsyncCompletionSourceProvider), Array.Empty<string>());
+        //s_providerContentTypeCache.TryAdd(typeof(IdeographAsyncCompletionSourceProvider), Array.Empty<string>());
         s_providerContentTypeCache.TryAdd(typeof(IdeographCompletionSourceProvider), Array.Empty<string>());
     }
 

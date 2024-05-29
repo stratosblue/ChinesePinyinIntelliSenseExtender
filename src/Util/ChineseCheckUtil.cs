@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using ChinesePinyinIntelliSenseExtender.Util;
 
 namespace ChinesePinyinIntelliSenseExtender;
 
@@ -58,6 +59,21 @@ internal static class ChineseCheckUtil
         }
 
         return false;
+    }
+
+    internal sealed class ContainsChineseCheckPredicate : IPreCheckPredicate
+    {
+        private static ContainsChineseCheckPredicate s_instance;
+        public static ContainsChineseCheckPredicate Instance => s_instance ??= new();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(string value) => ContainsChinese(value);
+    }
+    internal sealed class StartWithChineseCheckPredicate : IPreCheckPredicate
+    {
+        private static StartWithChineseCheckPredicate s_instance;
+        public static StartWithChineseCheckPredicate Instance => s_instance ??= new();
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(string value) => StartWithChinese(value);
     }
 
     #endregion Public 方法
