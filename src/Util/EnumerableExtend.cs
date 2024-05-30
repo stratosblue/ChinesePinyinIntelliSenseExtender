@@ -6,16 +6,16 @@ namespace ChinesePinyinIntelliSenseExtender.Util;
 
 internal static class EnumerableExtend
 {
-    public static U[] ParallelSelect<T, U>(this IReadOnlyList<T> array, Func<T, U> chooser)
+    public static U[] ParallelSelect<T, U>(this IReadOnlyList<T> array, Func<T, U> mapper)
     {
         var inputLength = array.Count;
         var output = new U[inputLength];
 
-        Parallel.For(0, inputLength, (i) => output[i] = chooser(array[i]));
+        Parallel.For(0, inputLength, (i) => output[i] = mapper(array[i]));
         return output;
     }
 
-    public static T[] ParallelWhere<T>(this IReadOnlyList<T> array, Func<T, bool> chooser)
+    public static T[] ParallelWhere<T>(this IReadOnlyList<T> array, Func<T, bool> predicate)
     {
         var inputLength = array.Count;
         var isChosen = new bool[inputLength];
@@ -23,7 +23,7 @@ internal static class EnumerableExtend
 
         Parallel.For(0, inputLength, () => 0, (i, _, count) =>
         {
-            if (chooser(array[i]))
+            if (predicate(array[i]))
             {
                 isChosen[i] = true;
                 count++;
