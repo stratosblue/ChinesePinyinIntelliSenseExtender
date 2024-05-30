@@ -14,15 +14,15 @@ namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 
 internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patternMatcherFactory) : IAsyncCompletionItemManager
 {
-    //private async Task write(TimeSpan t, string msg = "", [CallerMemberName] string n = "")
+    //private void write(TimeSpan t, string msg = "", [CallerMemberName] string n = "")
     //{
     //    using var s = File.AppendText("D:\\time.txt");
-    //    await s.WriteLineAsync($"[{DateTime.Now}] {n}: {t} ({msg})");
+    //    s.WriteLine($"[{DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond}] {n}: {t.TotalMilliseconds}ms ({msg})");
     //}
 
     private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
-    private readonly ConcurrentDictionary<(PreMatchType, StringPreCheckRule, string), string> _cache = [];
-    private GeneralOptions Options => GeneralOptions.Instance;
+    private readonly ConcurrentDictionary<(PreMatchType, StringPreCheckRule, string), string> _filterTextCache = [];
+    private GeneralOptions? _options;
 
     private async Task<InputMethodDictionaryGroup> GetInputMethodDictionaryGroupAsync()
     {
@@ -34,37 +34,33 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         return _inputMethodDictionaryGroup;
     }
 
-    private string GetFilterText(string t, IPreCheckPredicate shouldProcessChecker, InputMethodDictionaryGroup inputMethodDictionaryGroup)
+    private static IReadOnlyList<CompletionItem> SortCompletionItem(IReadOnlyList<CompletionItem> items)
     {
-        var key = (Options.PreMatchType, Options.PreCheckRule, t);
-
-        if (_cache.TryGetValue(key, out var r)) return r;
-        if (!shouldProcessChecker.Check(t)) AddToCacheAndReturn(t);
-
-        var spellings = inputMethodDictionaryGroup.FindAll(t);
-        var res = Options.EnableMultipleSpellings ? string.Join("/", spellings) : spellings[0];
-        return AddToCacheAndReturn($"{t}/{res}");
-
-        string AddToCacheAndReturn(string v)
+        bool CheckShouldSort()
         {
-            _cache.TryAdd(key, v);
-            return v;
+            return !(Parallel.For(1, items.Count, (i, p) =>
+            {
+                if (items[i - 1].SortText.CompareTo(items[i].SortText) > 0) p.Stop();
+            }).IsCompleted);
         }
+
+        if (CheckShouldSort()) { return items.AsParallel().OrderBy(i => i.SortText).ToArray(); }
+        return items;
     }
 
     public Task<ImmutableArray<CompletionItem>> SortCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionInitialDataSnapshot data, CancellationToken token)
     {
         //var st = ValueStopwatch.StartNew();
-        var sortedItems = data.InitialList.ToArray().OrderBy(i => i.SortText).ToImmutableArray();
+        var sortedItems = SortCompletionItem(data.InitialList).ToImmutableArray();
         //var t = st.Elapsed;
-        //await write(t);
-        //return sortedItems;
+        //write(t);
         return Task.FromResult(sortedItems);
     }
 
     public async Task<FilteredCompletionModel> UpdateCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionDataSnapshot data, CancellationToken token)
     {
         //var st = ValueStopwatch.StartNew();
+        //TimeSpan t;
 
         var view = session.TextView;
         // Filter by text
@@ -72,22 +68,40 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         if (string.IsNullOrWhiteSpace(filterText))
         {
             // There is no text filtering. Just apply user filters, sort alphabetically and return.
-            IEnumerable<CompletionItem> listFiltered = data.InitialSortedList.AsParallel();
+            IReadOnlyList<CompletionItem> listFiltered = data.InitialSortedList;
             if (data.SelectedFilters.Any(n => n.IsSelected))
             {
-                listFiltered = listFiltered.Where(n => ShouldBeInCompletionList(n, data.SelectedFilters));
+                listFiltered = listFiltered.ParallelWhere(n => ShouldBeInCompletionList(n, data.SelectedFilters));
             }
-            var listSorted = listFiltered.OrderBy(n => n.SortText);
-            var listHighlighted = listSorted.Select(n => new CompletionItemWithHighlight(n)).ToImmutableArray();
+            var listSorted = SortCompletionItem(listFiltered);
+            var listHighlighted = listSorted.ParallelSelect(n => new CompletionItemWithHighlight(n)).ToImmutableArray();
 
-            //var t2 = st.Elapsed;
-            //await write(t2, "short");
+            //t = st.Elapsed;
+            //write(t, "short");
             return new FilteredCompletionModel(listHighlighted, 0, data.SelectedFilters);
         }
 
-        var Options = GeneralOptions.Instance;
-        var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
+        _options ??= await GeneralOptions.GetLiveInstanceAsync();
+        var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(_options.PreMatchType, _options.PreCheckRule);
         var inputMethodDictionaryGroup = await GetInputMethodDictionaryGroupAsync();
+
+        string GetFilterText(string t)
+        {
+            var key = (_options.PreMatchType, _options.PreCheckRule, t);
+
+            if (_filterTextCache.TryGetValue(key, out var r)) return r;
+            if (!shouldProcessChecker.Check(t)) return AddToCacheAndReturn(t);
+
+            var spellings = inputMethodDictionaryGroup.FindAll(t);
+            var res = _options.EnableMultipleSpellings ? string.Join("/", spellings) : spellings[0];
+            return AddToCacheAndReturn($"{t}/{res}");
+
+            string AddToCacheAndReturn(string v)
+            {
+                _filterTextCache.TryAdd(key, v);
+                return v;
+            }
+        }
 
         // Pattern matcher not only filters, but also provides a way to order the results by their match quality.
         // The relevant CompletionItem is match.Item1, its PatternMatch is match.Item2
@@ -99,14 +113,10 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
             // Perform pattern matching
             .ParallelChoose(completionItem =>
             {
-                var n = patternMatcher.TryMatch(GetFilterText(completionItem.FilterText, shouldProcessChecker, inputMethodDictionaryGroup));
+                var match = patternMatcher.TryMatch(GetFilterText(completionItem.FilterText));
                 // Pick only items that were matched, unless length of filter text is 1
-                return (filterText.Length == 1 || n.HasValue, (completionItem, n));
-            })
-            .ToArray();
-
-        //var t = st.Elapsed;
-        //await write(t);
+                return (filterText.Length == 1 || match.HasValue, (completionItem, match));
+            });
 
         // See which filters might be enabled based on the typed code
         var textFilteredFilters = matches.SelectMany(n => n.completionItem.Filters).Distinct();
@@ -121,15 +131,16 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
             filterFilteredList = matches.Where(n => ShouldBeInCompletionList(n.completionItem, data.SelectedFilters)).ToArray();
         }
 
-        var bestMatch = filterFilteredList.OrderByDescending(n => n.Item2.HasValue).ThenBy(n => n.Item2).FirstOrDefault();
+        var bestMatch = filterFilteredList.OrderByDescending(n => n.match.HasValue).ThenBy(n => n.match).FirstOrDefault();
         var listWithHighlights = filterFilteredList.Select(n =>
         {
             ImmutableArray<Span> safeMatchedSpans = ImmutableArray<Span>.Empty;
+
             if (n.completionItem.DisplayText == n.completionItem.FilterText)
             {
-                if (n.Item2.HasValue)
+                if (n.match.HasValue)
                 {
-                    safeMatchedSpans = n.Item2.Value.MatchedSpans;
+                    safeMatchedSpans = n.match.Value.MatchedSpans;
                 }
             }
             else
@@ -170,10 +181,9 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         }
 
         //t = st.Elapsed;
-        //await write(t, "end");
+        //write(t, "end");
         return new FilteredCompletionModel(listWithHighlights, selectedItemIndex, updatedFilters);
     }
-
 
     private static bool ShouldBeInCompletionList(
         CompletionItem item,

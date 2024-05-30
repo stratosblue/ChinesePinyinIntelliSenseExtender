@@ -14,19 +14,13 @@ namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 [ContentType("Roslyn Languages")]
 [Order(Before = PredefinedCompletionNames.DefaultCompletionItemManager)]
 [TextViewRole(PredefinedTextViewRoles.Editable)]
-internal class IdeographAsyncCompletionItemManagerProvider : IAsyncCompletionItemManagerProvider
+[method: ImportingConstructor]
+internal class IdeographAsyncCompletionItemManagerProvider(IPatternMatcherFactory patternMatcherFactory) : IAsyncCompletionItemManagerProvider
 {
-    [Import]
-    public IPatternMatcherFactory PatternMatcherFactory = null!;
-
     private static IdeographAsyncCompletionItemManager? s_instance;
-
-    public IdeographAsyncCompletionItemManagerProvider()
-    {
-    }
 
     public IAsyncCompletionItemManager GetOrCreate(ITextView textView)
     {
-        return s_instance ??= new IdeographAsyncCompletionItemManager(PatternMatcherFactory);
+        return s_instance ??= new IdeographAsyncCompletionItemManager(patternMatcherFactory);
     }
 }
