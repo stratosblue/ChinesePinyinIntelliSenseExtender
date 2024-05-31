@@ -1,7 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 using System.Threading;
 using System.Windows;
-
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
 
@@ -47,7 +46,7 @@ public sealed class ChinesePinyinIntelliSenseExtenderPackage : AsyncPackage
             {
                 var exception = task.Exception.InnerException?.ToString();
                 cancellationToken.ThrowIfCancellationRequested();
-                MessageBox.Show($"Load options failed with \"{exception}\"", PackageName, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Load options failed with \"{exception}\"", PackageName);
             }
         }, cancellationToken, TaskContinuationOptions.OnlyOnFaulted, TaskScheduler.Current);
     }

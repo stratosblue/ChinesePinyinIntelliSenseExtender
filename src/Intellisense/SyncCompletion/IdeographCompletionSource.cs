@@ -36,7 +36,7 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
 
             var inputMethodDictionaryGroup = GetInputMethodDictionaryGroup();
 
-            var shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
+            var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
 
             var itemBuffer = ArrayPool<Completion>.Shared.Rent(allCompletions.Count * 5);  //预留足够多的空间，避免字典过多导致的问题
             try
@@ -44,7 +44,7 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
                 int bufferIndex = 0;
                 foreach (var completion in allCompletions)
                 {
-                    CreateCompletionWithConvertion(completion, inputMethodDictionaryGroup, shouldProcessCheckDelegate, itemBuffer, ref bufferIndex);
+                    CreateCompletionWithConvertion(completion, inputMethodDictionaryGroup, shouldProcessChecker, itemBuffer, ref bufferIndex);
                 }
 
                 if (bufferIndex > 0)
@@ -146,12 +146,12 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
         }
     }
 
-    private void CreateCompletionWithConvertion(Completion originCompletion, InputMethodDictionaryGroup inputMethodDictionaryGroup, Func<string, bool> shouldProcessCheck, Completion[] itemBuffer, ref int bufferIndex)
+    private void CreateCompletionWithConvertion(Completion originCompletion, InputMethodDictionaryGroup inputMethodDictionaryGroup, IPreCheckPredicate shouldProcessCheck, Completion[] itemBuffer, ref int bufferIndex)
     {
         var originInsertText = originCompletion.InsertionText;
 
         if (string.IsNullOrEmpty(originInsertText)
-            || !shouldProcessCheck(originInsertText))
+            || !shouldProcessCheck.Check(originInsertText))
         {
             return;
         }

@@ -47,9 +47,11 @@ internal class IdeographCompletionCommandHandler : IOleCommandTarget
     public int Exec(ref Guid pguidCmdGroup, uint nCmdID, uint nCmdexecopt, IntPtr pvaIn, IntPtr pvaOut)
     {
         //see https://learn.microsoft.com/zh-cn/visualstudio/extensibility/walkthrough-displaying-statement-completion?view=vs-2022&tabs=csharp#tabpanel_19_csharp
-
+        
         if (VsShellUtilities.IsInAutomationFunction(_serviceProvider)
-            || !_options.EnableSyncCompletionSupport)
+            || !_options.EnableSyncCompletionSupport
+            // 跳过 C#/F#，防止输入卡顿
+            || _textView.TextBuffer.ContentType.BaseTypes.Any(i => i.TypeName == "Roslyn Languages"))
         {
             return _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
         }

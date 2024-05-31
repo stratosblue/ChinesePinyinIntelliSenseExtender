@@ -47,7 +47,7 @@ internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncComp
         {
             return null;
         }
-
+        
         try
         {
             s_completionContextRecursionTag.Value = true;
@@ -60,7 +60,7 @@ internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncComp
 
             token.ThrowIfCancellationRequested();
 
-            var shouldProcessCheckDelegate = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
+            var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(Options.PreMatchType, Options.PreCheckRule);
 
             var allCompletionItems = tasks.SelectMany(static m => m.Status == TaskStatus.RanToCompletion && m.Result?.Items is not null ? m.Result.Items.AsEnumerable() : Array.Empty<CompletionItem>());
 
@@ -79,7 +79,7 @@ internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncComp
                 int bufferIndex = 0;
                 allCompletionItems.AsParallel()
                                   .WithCancellation(token)
-                                  .ForAll(m => CreateCompletionItemWithConvertion(m, inputMethodDictionaryGroup, shouldProcessCheckDelegate, itemBuffer, ref bufferIndex));
+                                  .ForAll(m => CreateCompletionItemWithConvertion(m, inputMethodDictionaryGroup, shouldProcessChecker, itemBuffer, ref bufferIndex));
 
                 if (bufferIndex > 0)
                 {
@@ -120,11 +120,11 @@ internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncComp
 
     #region impl
 
-    private void CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, InputMethodDictionaryGroup inputMethodDictionaryGroup, Func<string, bool> shouldProcessCheck, CompletionItem[] itemBuffer, ref int bufferIndex)
+    private void CreateCompletionItemWithConvertion(CompletionItem originCompletionItem, InputMethodDictionaryGroup inputMethodDictionaryGroup, IPreCheckPredicate shouldProcessCheck, CompletionItem[] itemBuffer, ref int bufferIndex)
     {
         var originInsertText = originCompletionItem.InsertText;
 
-        if (!shouldProcessCheck(originInsertText))
+        if (!shouldProcessCheck.Check(originInsertText))
         {
             return;
         }
