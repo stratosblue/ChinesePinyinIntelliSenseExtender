@@ -12,44 +12,33 @@ using Microsoft.VisualStudio.Text.PatternMatching;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 
-internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patternMatcherFactory) : IAsyncCompletionItemManager
+internal class IdeographAsyncCompletionItemManager(GeneralOptions options, IPatternMatcherFactory patternMatcherFactory) : IAsyncCompletionItemManager
 {
-    //private void write(TimeSpan t, string msg = "", [CallerMemberName] string n = "")
-    //{
-    //    using var s = File.AppendText("D:\\time.txt");
-    //    s.WriteLine($"[{DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond}] {n}: {t.TotalMilliseconds}ms ({msg})");
-    //}
+    #region Private 字段
+
+    /// <summary>
+    /// 匹配缓存，当前没有移除？可能需要处理
+    /// </summary>
+    private readonly ConcurrentDictionary<(PreMatchType, StringPreCheckRule, string), string> _filterTextCache = [];
+
+    private readonly GeneralOptions _options = options ?? throw new ArgumentNullException(nameof(options));
+
+    private readonly IPatternMatcherFactory _patternMatcherFactory = patternMatcherFactory ?? throw new ArgumentNullException(nameof(patternMatcherFactory));
 
     private InputMethodDictionaryGroup? _inputMethodDictionaryGroup;
-    private readonly ConcurrentDictionary<(PreMatchType, StringPreCheckRule, string), string> _filterTextCache = [];
-    private GeneralOptions? _options;
 
-    private async Task<InputMethodDictionaryGroup> GetInputMethodDictionaryGroupAsync()
-    {
-        if (_inputMethodDictionaryGroup is null
-            || _inputMethodDictionaryGroup.IsDisposed)
-        {
-            _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
-        }
-        return _inputMethodDictionaryGroup;
-    }
+    #endregion Private 字段
 
-    private static IReadOnlyList<CompletionItem> SortCompletionItem(IReadOnlyList<CompletionItem> items)
-    {
-        bool CheckShouldSort()
-        {
-            return !(Parallel.For(1, items.Count, (i, p) =>
-            {
-                if (items[i - 1].SortText.CompareTo(items[i].SortText) > 0) p.Stop();
-            }).IsCompleted);
-        }
-
-        if (CheckShouldSort()) { return items.AsParallel().OrderBy(i => i.SortText).ToArray(); }
-        return items;
-    }
+    #region Public 方法
 
     public Task<ImmutableArray<CompletionItem>> SortCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionInitialDataSnapshot data, CancellationToken token)
     {
+        if (!_options.Enable
+            || _options.AsyncCompletionMode != AsyncCompletionMode.Experimental)
+        {
+            return Task.FromResult<ImmutableArray<CompletionItem>>(default);
+        }
+
         //var st = ValueStopwatch.StartNew();
         var sortedItems = SortCompletionItem(data.InitialList).ToImmutableArray();
         //var t = st.Elapsed;
@@ -59,6 +48,12 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
 
     public async Task<FilteredCompletionModel> UpdateCompletionListAsync(IAsyncCompletionSession session, AsyncCompletionSessionDataSnapshot data, CancellationToken token)
     {
+        if (!_options.Enable
+            || _options.AsyncCompletionMode != AsyncCompletionMode.Experimental)
+        {
+            return default!;
+        }
+
         //var st = ValueStopwatch.StartNew();
         //TimeSpan t;
 
@@ -83,7 +78,6 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
             return new FilteredCompletionModel(listHighlighted, 0, data.SelectedFilters);
         }
 
-        _options ??= await GeneralOptions.GetLiveInstanceAsync();
         var shouldProcessChecker = StringPreMatchUtil.GetPreCheckPredicate(_options.PreMatchType, _options.PreCheckRule);
         var inputMethodDictionaryGroup = await GetInputMethodDictionaryGroupAsync();
 
@@ -187,9 +181,17 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         return new FilteredCompletionModel(listWithHighlights, selectedItemIndex, updatedFilters);
     }
 
-    private static bool ShouldBeInCompletionList(
-        CompletionItem item,
-        ImmutableArray<CompletionFilterWithState> filtersWithState)
+    #endregion Public 方法
+
+    #region Private 方法
+
+    //private void write(TimeSpan t, string msg = "", [CallerMemberName] string n = "")
+    //{
+    //    using var s = File.AppendText("D:\\time.txt");
+    //    s.WriteLine($"[{DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond}] {n}: {t.TotalMilliseconds}ms ({msg})");
+    //}
+
+    private static bool ShouldBeInCompletionList(CompletionItem item, ImmutableArray<CompletionFilterWithState> filtersWithState)
     {
         foreach (var filterWithState in filtersWithState.Where(n => n.IsSelected))
         {
@@ -200,4 +202,30 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         }
         return false;
     }
+
+    private static IReadOnlyList<CompletionItem> SortCompletionItem(IReadOnlyList<CompletionItem> items)
+    {
+        bool CheckShouldSort()
+        {
+            return !(Parallel.For(1, items.Count, (i, p) =>
+            {
+                if (items[i - 1].SortText.CompareTo(items[i].SortText) > 0) p.Stop();
+            }).IsCompleted);
+        }
+
+        if (CheckShouldSort()) { return items.AsParallel().OrderBy(i => i.SortText).ToArray(); }
+        return items;
+    }
+
+    private async Task<InputMethodDictionaryGroup> GetInputMethodDictionaryGroupAsync()
+    {
+        if (_inputMethodDictionaryGroup is null
+            || _inputMethodDictionaryGroup.IsDisposed)
+        {
+            _inputMethodDictionaryGroup = await InputMethodDictionaryGroupProvider.GetAsync();
+        }
+        return _inputMethodDictionaryGroup;
+    }
+
+    #endregion Private 方法
 }

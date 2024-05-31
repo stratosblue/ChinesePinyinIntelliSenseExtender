@@ -1,20 +1,16 @@
 ﻿using System.Runtime.CompilerServices;
-
+using ChinesePinyinIntelliSenseExtender.Internal;
 using ChinesePinyinIntelliSenseExtender.Options;
-using static ChinesePinyinIntelliSenseExtender.ChineseCheckUtil;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;
-
-internal interface IPreCheckPredicate
-{
-    bool Check(string value);
-}
 
 /// <summary>
 /// 字符预检查工具
 /// </summary>
 internal static class StringPreMatchUtil
 {
+    #region Public 方法
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static IPreCheckPredicate GetPreCheckPredicate(PreMatchType type, StringPreCheckRule rule)
     {
@@ -33,6 +29,8 @@ internal static class StringPreMatchUtil
             _ => NoCheckPredicate.Instance,
         };
     }
+
+    #endregion Public 方法
 
     #region NonAsciiCheck
 
@@ -69,27 +67,75 @@ internal static class StringPreMatchUtil
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static bool IsNonAscii(char value) => value > 0x7F;
 
-    internal sealed class IsNonAsciiPreCheckPredicate : IPreCheckPredicate
-    {
-        private static IsNonAsciiPreCheckPredicate s_instance;
-        public static IsNonAsciiPreCheckPredicate Instance => s_instance ??= new();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Check(string value) => IsNonAscii(value);
-    }
+    #endregion NonAsciiCheck
+
+    #region PreCheckPredicates
+
     internal sealed class FirstCharIsNonAsciiPreCheckPredicate : IPreCheckPredicate
     {
+        #region Private 字段
+
         private static FirstCharIsNonAsciiPreCheckPredicate s_instance;
+
+        #endregion Private 字段
+
+        #region Public 属性
+
         public static FirstCharIsNonAsciiPreCheckPredicate Instance => s_instance ??= new();
+
+        #endregion Public 属性
+
+        #region Public 方法
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Check(string value) => value.Length > 0 && IsNonAscii(value[0]);
-    }
-    internal sealed class NoCheckPredicate : IPreCheckPredicate
-    {
-        private static NoCheckPredicate s_instance;
-        public static NoCheckPredicate Instance => s_instance ??= new();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Check(string value) => true;
+
+        #endregion Public 方法
     }
 
-    #endregion NonAsciiCheck
+    internal sealed class IsNonAsciiPreCheckPredicate : IPreCheckPredicate
+    {
+        #region Private 字段
+
+        private static IsNonAsciiPreCheckPredicate s_instance;
+
+        #endregion Private 字段
+
+        #region Public 属性
+
+        public static IsNonAsciiPreCheckPredicate Instance => s_instance ??= new();
+
+        #endregion Public 属性
+
+        #region Public 方法
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(string value) => IsNonAscii(value);
+
+        #endregion Public 方法
+    }
+
+    internal sealed class NoCheckPredicate : IPreCheckPredicate
+    {
+        #region Private 字段
+
+        private static NoCheckPredicate s_instance;
+
+        #endregion Private 字段
+
+        #region Public 属性
+
+        public static NoCheckPredicate Instance => s_instance ??= new();
+
+        #endregion Public 属性
+
+        #region Public 方法
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(string value) => true;
+
+        #endregion Public 方法
+    }
+
+    #endregion PreCheckPredicates
 }

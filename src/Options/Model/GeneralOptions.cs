@@ -18,6 +18,13 @@ internal class GeneralOptions : Options<GeneralOptions>
 
     #region 基础
 
+    /// <summary>基础/异步完成模式 (Default: 默认模式；Experimental: 实验模式（新模式，使用不同的完成逻辑，响应更快）) </summary>
+    [Category("基础")]
+    [DisplayName("异步完成模式")]
+    [Description("Default: 默认模式；Experimental: 实验模式（新模式，使用不同的完成逻辑，响应更快）")]
+    [DefaultValue(AsyncCompletionMode.Default)]
+    public AsyncCompletionMode AsyncCompletionMode { get; set; } = AsyncCompletionMode.Default;
+
     /// <summary>基础/启用 (是否启用拼音联想功能) </summary>
     [Category("基础")]
     [DisplayName("启用")]

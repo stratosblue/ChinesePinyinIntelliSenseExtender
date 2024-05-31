@@ -4,7 +4,7 @@ using System.Buffers;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Threading;
-
+using ChinesePinyinIntelliSenseExtender.Internal;
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
 
@@ -43,11 +43,12 @@ internal class IdeographAsyncCompletionSource : CompletionSourceBase, IAsyncComp
     public async Task<CompletionContext?> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token)
     {
         if (s_completionContextRecursionTag.Value
-            || !Options.Enable)
+            || !Options.Enable
+            || Options.AsyncCompletionMode != AsyncCompletionMode.Default)
         {
             return null;
         }
-        
+
         try
         {
             s_completionContextRecursionTag.Value = true;

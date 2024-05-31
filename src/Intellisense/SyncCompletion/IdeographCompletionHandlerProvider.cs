@@ -40,9 +40,17 @@ internal class IdeographCompletionHandlerProvider : IVsTextViewCreationListener
 
         var options = GeneralOptions.Instance;
 
-        if (options.EnableSyncCompletionSupport)
+        if (options.Enable
+            && options.EnableSyncCompletionSupport)
         {
-            textView.Properties.GetOrCreateSingletonProperty(() => new IdeographCompletionCommandHandler(textViewAdapter, textView, CompletionBroker, ServiceProvider, options));
+            //RoslynLanguages 都为异步完成
+            //此处可以进一步缓存与完善异步完成的类型
+            //前置检查，理论上 ContentType 不会在编辑过程中改变？
+            var isRoslynLanguagesBase = textView.TextBuffer.ContentType.BaseTypes.Any(i => i.TypeName == "Roslyn Languages");
+            if (!isRoslynLanguagesBase) //异步完成不需要此逻辑，跳过 CommandHandler 处理
+            {
+                textView.Properties.GetOrCreateSingletonProperty(() => new IdeographCompletionCommandHandler(textViewAdapter, textView, CompletionBroker, ServiceProvider, options));
+            }
         }
     }
 

@@ -70,6 +70,7 @@
     </Compile>
     <Compile Include="Options\Model\DictionaryManageOptions.cs" />
     <Compile Include="Options\Model\Options.cs" />
+    <Compile Include="Options\Model\AsyncCompletionMode.cs" />
     <Compile Include="Options\Model\StringPreCheckRule.cs" />
     <Compile Include="Options\Model\PreMatchType.cs" />
     <Compile Include="Options\DictionaryManagePage.cs">
@@ -114,6 +115,7 @@
     <Compile Include="Util\CompletionSetSelectBestMatchHelper.cs" />
     <Compile Include="Util\EnumerableExtend.cs" />
     <Compile Include="Util\InputTextMatchHelper.cs" />
+    <Compile Include="Internal\IPreCheckPredicate.cs" />
     <Compile Include="Util\StringPreMatchUtil.cs" />
     <Compile Include="Util\InputMethodDictionaryLoader.cs" />
     <Compile Include="Intellisense\AsyncCompletion\IdeographAsyncCompletionSource.cs" />

@@ -3,16 +3,18 @@
 using System.ComponentModel.Composition;
 using System.Diagnostics;
 using System.Threading;
+using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
+using Microsoft.VisualStudio.Utilities;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense.AsyncCompletion;
 
-//[Export(typeof(IAsyncCompletionSourceProvider))]
-//[Name("表意文字表音补全")]
-//[ContentType("text")]
+[Export(typeof(IAsyncCompletionSourceProvider))]
+[Name("表意文字表音补全")]
+[ContentType("text")]
 internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProviderBase<ITextView, IAsyncCompletionSource>, IAsyncCompletionSourceProvider
 {
     #region Private 字段
@@ -35,6 +37,13 @@ internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProvider
 
     protected override IAsyncCompletionSource CreateCompletionSource(ITextView dependence)
     {
+        //实验模式时不使用 IdeographAsyncCompletionSource
+        if (!Options.Enable
+            || Options.AsyncCompletionMode == AsyncCompletionMode.Experimental)
+        {
+            return EmptyAsyncCompletionSource.Instance;
+        }
+
         var currentContentType = dependence.TextBuffer.ContentType;
 
         var otherAsyncCompletionSources = _lazyAsyncCompletionSourceProviders

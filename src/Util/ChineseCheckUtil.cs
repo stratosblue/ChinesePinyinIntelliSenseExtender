@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using ChinesePinyinIntelliSenseExtender.Util;
+using ChinesePinyinIntelliSenseExtender.Internal;
 
 namespace ChinesePinyinIntelliSenseExtender;
 
@@ -63,17 +63,24 @@ internal static class ChineseCheckUtil
 
     internal sealed class ContainsChineseCheckPredicate : IPreCheckPredicate
     {
+        #region Private 字段
+
         private static ContainsChineseCheckPredicate s_instance;
+
+        #endregion Private 字段
+
+        #region Public 属性
+
         public static ContainsChineseCheckPredicate Instance => s_instance ??= new();
+
+        #endregion Public 属性
+
+        #region Public 方法
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool Check(string value) => ContainsChinese(value);
-    }
-    internal sealed class StartWithChineseCheckPredicate : IPreCheckPredicate
-    {
-        private static StartWithChineseCheckPredicate s_instance;
-        public static StartWithChineseCheckPredicate Instance => s_instance ??= new();
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public bool Check(string value) => StartWithChinese(value);
+
+        #endregion Public 方法
     }
 
     #endregion Public 方法
@@ -98,4 +105,30 @@ internal static class ChineseCheckUtil
     private static bool IsChinese(char value) => value >= 0x4e00 && value <= 0x9fd5;
 
     #endregion Private 方法
+
+    #region Internal 类
+
+    internal sealed class StartWithChineseCheckPredicate : IPreCheckPredicate
+    {
+        #region Private 字段
+
+        private static StartWithChineseCheckPredicate s_instance;
+
+        #endregion Private 字段
+
+        #region Public 属性
+
+        public static StartWithChineseCheckPredicate Instance => s_instance ??= new();
+
+        #endregion Public 属性
+
+        #region Public 方法
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool Check(string value) => StartWithChinese(value);
+
+        #endregion Public 方法
+    }
+
+    #endregion Internal 类
 }

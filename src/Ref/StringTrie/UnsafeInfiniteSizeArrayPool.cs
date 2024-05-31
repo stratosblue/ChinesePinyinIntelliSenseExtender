@@ -1,6 +1,5 @@
 ﻿#pragma warning disable IDE0051
 
-using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 

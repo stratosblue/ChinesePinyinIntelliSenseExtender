@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace InputMethodDictionary;
+﻿namespace InputMethodDictionary;
 
 /// <summary>
 /// 匹配结果字符串

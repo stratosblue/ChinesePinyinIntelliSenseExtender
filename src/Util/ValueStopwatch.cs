@@ -6,6 +6,8 @@ namespace ChinesePinyinIntelliSenseExtender.Util;
 
 internal struct ValueStopwatch(long stamp)
 {
+    #region Public 属性
+
     public readonly TimeSpan Elapsed
     {
         get
@@ -16,8 +18,14 @@ internal struct ValueStopwatch(long stamp)
         }
     }
 
+    #endregion Public 属性
+
+    #region Public 方法
+
     public static ValueStopwatch StartNew()
     {
         return new ValueStopwatch(Stopwatch.GetTimestamp());
     }
+
+    #endregion Public 方法
 }

@@ -1,9 +1,8 @@
-# ChinesePinyinIntelliSenseExtender
+﻿# ChinesePinyinIntelliSenseExtender
 
-VisualStudio中文代码拼音补全拓展。
+VisualStudio表意文字补全拓展(汉语拼音、五笔等)。
 
-- 仅在 `C#` 和 `F#` 下进行了测试，理论上支持所有基于 `IAsyncCompletionSource` 的完成。
-- 支持自定义字符映射。
+- 支持自定义字符映射，可支持任意表意文字的表音补全。
 
 View at [VisualStudio Marketplace](https://marketplace.visualstudio.com/items?itemName=stratos.ChinesePinyinIntelliSenseExtender)
 
