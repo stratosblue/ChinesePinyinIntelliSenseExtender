@@ -65,7 +65,9 @@ internal class IdeographAsyncCompletionItemManager(IPatternMatcherFactory _patte
         var view = session.TextView;
         // Filter by text
         var filterText = session.ApplicableToSpan.GetText(data.Snapshot);
-        if (string.IsNullOrWhiteSpace(filterText))
+        if (string.IsNullOrWhiteSpace(filterText)
+            // 光标在 F# 的特殊标志符之后： ``aaa!`` |
+            || char.IsWhiteSpace(filterText[filterText.Length - 1]))
         {
             // There is no text filtering. Just apply user filters, sort alphabetically and return.
             IReadOnlyList<CompletionItem> listFiltered = data.InitialSortedList;
