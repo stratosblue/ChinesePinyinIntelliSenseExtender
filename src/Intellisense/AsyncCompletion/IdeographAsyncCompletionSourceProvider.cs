@@ -2,10 +2,8 @@
 
 using System.ComponentModel.Composition;
 using System.Diagnostics;
-using System.Threading;
 using ChinesePinyinIntelliSenseExtender.Options;
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
-using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion.Data;
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Utilities;
@@ -41,7 +39,7 @@ internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProvider
         if (!Options.Enable
             || Options.AsyncCompletionMode == AsyncCompletionMode.Experimental)
         {
-            return EmptyAsyncCompletionSource.Instance;
+            return null!;
         }
 
         var currentContentType = dependence.TextBuffer.ContentType;
@@ -63,7 +61,7 @@ internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProvider
         Debug.WriteLine($"Total {otherAsyncCompletionSources?.Count ?? 0} IAsyncCompletionSource found.");
 
         IAsyncCompletionSource completionSource = otherAsyncCompletionSources is null || otherAsyncCompletionSources.Count == 0
-                                                  ? EmptyAsyncCompletionSource.Instance
+                                                  ? null!
                                                   : new IdeographAsyncCompletionSource(otherAsyncCompletionSources!, Options);
 
         return completionSource;
@@ -80,31 +78,8 @@ internal class IdeographAsyncCompletionSourceProvider : CompletionSourceProvider
 
     protected override IAsyncCompletionSource GetDefaultCompletionSource(ITextView dependence)
     {
-        return EmptyAsyncCompletionSource.Instance;
+        return null!;
     }
 
     #endregion Protected 方法
-
-    #region Private 类
-
-    private sealed class EmptyAsyncCompletionSource : IAsyncCompletionSource
-    {
-        #region Public 属性
-
-        public static EmptyAsyncCompletionSource Instance { get; } = new();
-
-        #endregion Public 属性
-
-        #region Public 方法
-
-        public Task<CompletionContext> GetCompletionContextAsync(IAsyncCompletionSession session, CompletionTrigger trigger, SnapshotPoint triggerLocation, SnapshotSpan applicableToSpan, CancellationToken token) => Task.FromResult<CompletionContext>(null!);
-
-        public Task<object> GetDescriptionAsync(IAsyncCompletionSession session, CompletionItem item, CancellationToken token) => Task.FromResult<object>(null!);
-
-        public CompletionStartData InitializeCompletion(CompletionTrigger trigger, SnapshotPoint triggerLocation, CancellationToken token) => CompletionStartData.DoesNotParticipateInCompletion;
-
-        #endregion Public 方法
-    }
-
-    #endregion Private 类
 }
