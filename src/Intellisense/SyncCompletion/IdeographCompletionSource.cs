@@ -90,7 +90,8 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
 
     private Completion CloneCompletion(Completion originCompletion)
     {
-        if (originCompletion is ICustomCommit customCommitter)
+        if (Options.EnableSpecialCommitSupport
+            && originCompletion is ICustomCommit customCommitter)
         {
             return originCompletion switch
             {
@@ -120,7 +121,8 @@ internal class IdeographCompletionSource : CompletionSourceBase, ICompletionSour
     {
         var displayText = FormatString(Options.SyncCompletionDisplayTextFormat, spelling, originInsertText);
 
-        if (originCompletion is ICustomCommit customCommitter)
+        if (Options.EnableSpecialCommitSupport
+            && originCompletion is ICustomCommit customCommitter)
         {
             return originCompletion switch
             {

@@ -39,6 +39,13 @@ internal class GeneralOptions : Options<GeneralOptions>
     [DefaultValue(true)]
     public bool EnableMultipleSpellings { get; set; } = true;
 
+    /// <summary>基础/启用特殊提交支持 (关闭时，对于特殊提交将会按字面值进行提交，如：xaml中智能提示"&lt;新建事件处理程序&gt;"，将按字面值输入"&lt;新建事件处理程序&gt;"，而不是创建事件执行方法并绑定。) </summary>
+    [Category("基础")]
+    [DisplayName("启用特殊提交支持")]
+    [Description("关闭时，对于特殊提交将会按字面值进行提交，如：xaml中智能提示\"<新建事件处理程序>\"，将按字面值输入\"<新建事件处理程序>\"，而不是创建事件执行方法并绑定。")]
+    [DefaultValue(true)]
+    public bool EnableSpecialCommitSupport { get; set; } = true;
+
     /// <summary>基础/启用同步完成支持（实验） (是否启用对同步完成的实验性支持，如：C++) </summary>
     [Category("基础")]
     [DisplayName("启用同步完成支持（实验）")]
