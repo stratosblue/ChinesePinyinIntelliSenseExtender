@@ -38,6 +38,26 @@ internal static class InputTextMatchHelper
             return currentCompletionScore;
         }
 
+        if (matchText.StartsWith("#", StringComparison.Ordinal))    //以 # 起始的特殊输入，完全匹配
+        {
+            if (inputLength > matchLength - 1)
+            {
+                return currentCompletionScore;
+            }
+
+            int i = 1, j = 0;
+            for (; i < matchText.Length && j < inputText.Length; i++, j++)
+            {
+                if (matchText[i] != inputText[j])
+                {
+                    return currentCompletionScore;
+                }
+            }
+            return i == matchText.Length - 1
+                   ? i * 1000 * UpperMatchSocre
+                   : i * 100 * UpperMatchSocre;
+        }
+
         //下方逻辑是从 CompletionSet 中 copy 后改的
 
         var inputIndex = 0;
