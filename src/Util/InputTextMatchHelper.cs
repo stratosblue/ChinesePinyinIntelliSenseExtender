@@ -26,7 +26,7 @@ internal static class InputTextMatchHelper
 
         const int InvalidSocre = -1; //无效分数
         const int InitSocreRewards = 1; //初始分数奖励
-        const int UpperMatchSocre = 5;  //大写匹配分数
+        const int SpecialMatchSocre = 5;  //特殊匹配分数 - AaaBbb 中的 B; aaa_bbb 中 _ 后的 b
 
         var currentCompletionScore = InvalidSocre;
         charsMatchedCount = 0;
@@ -55,8 +55,8 @@ internal static class InputTextMatchHelper
                 }
             }
             return i == matchText.Length - 1
-                   ? i * 1000 * UpperMatchSocre
-                   : i * 100 * UpperMatchSocre;
+                   ? i * 1000 * SpecialMatchSocre
+                   : i * 100 * SpecialMatchSocre;
         }
 
         //下方逻辑是从 CompletionSet 中 copy 后改的
@@ -64,10 +64,12 @@ internal static class InputTextMatchHelper
         var inputIndex = 0;
         var matchIndex = 0;
         var scoreRewards = InitSocreRewards;  //分数奖励
+        var preOriginMatchChar = char.MinValue; //上一个原始匹配字符
 
         for (; inputIndex < inputLength; inputIndex++)
         {
             var inputChar = char.ToLowerInvariant(inputText[inputIndex]);
+            preOriginMatchChar = char.MinValue;
 
             for (; matchIndex < matchLength;)
             {
@@ -87,22 +89,27 @@ internal static class InputTextMatchHelper
                     continue;
                 }
 
-                if (char.IsUpper(originMatchChar))  //大写字母匹配
+                if (char.IsUpper(originMatchChar))  //当前为大写字母匹配
                 {
-                    currentCompletionScore += UpperMatchSocre + scoreRewards;
+                    if (char.IsLower(preOriginMatchChar)
+                        || char.IsPunctuation(preOriginMatchChar)) //上一个为小写或符号
+                    {
+                        currentCompletionScore += SpecialMatchSocre;
+                    }
                 }
-                else
+                else if (char.IsLower(originMatchChar))  //当前为小写字母匹配
                 {
-                    currentCompletionScore += scoreRewards;   //普通匹配
+                    if (char.IsPunctuation(preOriginMatchChar)) //上一个为符号
+                    {
+                        currentCompletionScore += SpecialMatchSocre;
+                    }
                 }
 
-                if (matchIndex == 0)    //首字母匹配
-                {
-                    currentCompletionScore += UpperMatchSocre;
-                }
+                currentCompletionScore += scoreRewards;   //普通匹配
 
                 scoreRewards++; //增加匹配分
                 charsMatchedCount++;
+                preOriginMatchChar = originMatchChar;
                 break;
             }
         }
@@ -118,6 +125,11 @@ internal static class InputTextMatchHelper
                 if (charsMatchedCount == matchLength)  //完整匹配目标项
                 {
                     currentCompletionScore *= 12 * inputLength;
+                    //大小写完全匹配翻倍
+                    if (string.Equals(inputText, matchText, StringComparison.Ordinal))
+                    {
+                        currentCompletionScore *= 2;
+                    }
                 }
                 else
                 {

@@ -83,14 +83,18 @@ internal class IdeographCompletionCommandHandler : IOleCommandTarget
                 {
                     if (completionSession.SelectedCompletionSet.SelectionStatus.IsSelected)
                     {
-                        if (isTypedWhiteSpace) //暂时取消空格输入，避免类似：输入 int 后键入空格，会插入模糊匹配的完成项
-                        {
-                            completionSession.Dismiss();
-                        }
-                        else
-                        {
-                            completionSession.Commit();
-                        }
+                        // 暂时调整了匹配逻辑，至少int可以正常输入了，开启空格输入
+                        //if (isTypedWhiteSpace) //暂时取消空格输入，避免类似：输入 int 后键入空格，会插入模糊匹配的完成项
+                        //{
+                        //    completionSession.Dismiss();
+                        //}
+                        //else
+                        //{
+                        //    completionSession.Commit();
+                        //}
+
+                        completionSession.Commit();
+
                         if (isTypedWhiteSpace || isTypedPunctuation)
                         {
                             _nextCommandHandler.Exec(ref pguidCmdGroup, nCmdID, nCmdexecopt, pvaIn, pvaOut);
