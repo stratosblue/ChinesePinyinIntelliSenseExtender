@@ -55,10 +55,11 @@ internal static class CompletionSetSelectBestMatchHelper
             else if (currentCompletionScore == selectedCompletionScore)
             {
                 isUnique = false;
-                if (isSelected)
-                {
-                    break;
-                }
+                //不提前退出，匹配所有项
+                //if (isSelected)
+                //{
+                //    break;
+                //}
             }
         }
 

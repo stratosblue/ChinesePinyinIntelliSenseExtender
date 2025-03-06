@@ -24,10 +24,11 @@ internal static class InputTextMatchHelper
         // inputText 在 matchText 中找到更多连续匹配，eg: ang -> YangPin 分数应大于 Haineng
         // inputText 与 matchText 首字母匹配，eg: Hang -> HaoYang 分数应大于 NiHaoYang
 
+        const int InvalidSocre = -1; //无效分数
         const int InitSocreRewards = 1; //初始分数奖励
         const int UpperMatchSocre = 5;  //大写匹配分数
 
-        var currentCompletionScore = -1;
+        var currentCompletionScore = InvalidSocre;
         charsMatchedCount = 0;
 
         var inputLength = inputText.Length;
@@ -75,6 +76,10 @@ internal static class InputTextMatchHelper
 
                 if (inputChar != matchChar)
                 {
+                    if (inputIndex == 0 && matchIndex == 1) //首字符不匹配，无效
+                    {
+                        return InvalidSocre;
+                    }
                     if (!char.IsPunctuation(originMatchChar))   //非符号匹配，重置连续匹配奖励分
                     {
                         scoreRewards = InitSocreRewards;
