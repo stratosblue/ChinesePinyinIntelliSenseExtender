@@ -74,8 +74,7 @@ internal class IdeographCompletionCommandHandler : IOleCommandTarget
 
         if (nCmdID == (uint)VSConstants.VSStd2KCmdID.RETURN
             || nCmdID == (uint)VSConstants.VSStd2KCmdID.TAB
-            || isTypedWhiteSpace
-            || isTypedPunctuation)
+            || isTypedWhiteSpace)
         {
             var completionSessions = _completionBroker.GetSessions(_textView);
             foreach (var completionSession in completionSessions)
