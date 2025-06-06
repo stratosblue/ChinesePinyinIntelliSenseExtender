@@ -12,8 +12,8 @@ dotnet_style_qualification_for_property = false:silent
 dotnet_style_qualification_for_method = false:silent
 dotnet_style_qualification_for_event = false:silent
 dotnet_style_require_accessibility_modifiers = for_non_interface_members:silent
-indent_size = 4
-tab_width = 4
+indent_size = 2
+tab_width = 2
 dotnet_style_operator_placement_when_wrapping = beginning_of_line
 
 # c# 文件
@@ -119,6 +119,7 @@ csharp_style_prefer_readonly_struct = true
 # 代码块首选项
 csharp_prefer_braces = true:silent
 csharp_prefer_simple_using_statement = true:suggestion
+csharp_prefer_system_threading_lock = true:suggestion
 csharp_style_namespace_declarations = file_scoped:suggestion
 csharp_style_prefer_method_group_conversion = true:silent
 csharp_style_prefer_top_level_statements = true:silent
@@ -134,6 +135,7 @@ csharp_style_prefer_null_check_over_type_check = true
 csharp_style_prefer_range_operator = true
 csharp_style_prefer_tuple_swap = true
 csharp_style_prefer_utf8_string_literals = true
+csharp_style_prefer_primary_constructors = true:suggestion
 csharp_style_throw_expression = true
 csharp_style_unused_value_assignment_preference = discard_variable
 csharp_style_unused_value_expression_statement_preference = discard_variable
@@ -300,11 +302,3 @@ dotnet_naming_style.以_为前缀.required_prefix = _
 dotnet_naming_style.以_为前缀.required_suffix = 
 dotnet_naming_style.以_为前缀.word_separator = 
 dotnet_naming_style.以_为前缀.capitalization = camel_case
-
-[*.csproj]
-indent_size = 2
-tab_width = 2
-
-[*.props]
-indent_size = 2
-tab_width = 2
