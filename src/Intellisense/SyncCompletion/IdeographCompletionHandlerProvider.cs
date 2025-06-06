@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.Composition;
+
 using ChinesePinyinIntelliSenseExtender.Options;
+
 using Microsoft.VisualStudio.Editor;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Shell;

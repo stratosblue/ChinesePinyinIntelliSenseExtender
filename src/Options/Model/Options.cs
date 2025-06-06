@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using System.Threading;
 
 using Microsoft;
 using Microsoft.VisualStudio.Settings;
@@ -20,6 +19,7 @@ namespace ChinesePinyinIntelliSenseExtender.Options;
 internal abstract class Options<T> where T : Options<T>, new()
 {
     private static readonly AsyncLazy<T> s_liveModel = new(CreateAsync, ThreadHelper.JoinableTaskFactory);
+
     private static readonly AsyncLazy<ShellSettingsManager> s_settingsManager = new(GetSettingsManagerAsync, ThreadHelper.JoinableTaskFactory);
 
     protected Options()
@@ -167,10 +167,10 @@ internal abstract class Options<T> where T : Options<T>, new()
 
     private static async Task<ShellSettingsManager> GetSettingsManagerAsync()
     {
-#pragma warning disable VSTHRD010 
+#pragma warning disable VSTHRD010
         // False-positive in Threading Analyzers. Bug tracked here https://github.com/Microsoft/vs-threading/issues/230
         var svc = await AsyncServiceProvider.GlobalProvider.GetServiceAsync(typeof(SVsSettingsManager)) as IVsSettingsManager;
-#pragma warning restore VSTHRD010 
+#pragma warning restore VSTHRD010
 
         Assumes.Present(svc);
 

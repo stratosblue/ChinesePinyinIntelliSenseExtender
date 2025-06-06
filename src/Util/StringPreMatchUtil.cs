@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+
 using ChinesePinyinIntelliSenseExtender.Internal;
 using ChinesePinyinIntelliSenseExtender.Options;
 

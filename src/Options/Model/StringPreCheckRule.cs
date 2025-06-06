@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace ChinesePinyinIntelliSenseExtender.Options;
+﻿namespace ChinesePinyinIntelliSenseExtender.Options;
 
 /// <summary>
 /// 字符串预检查规则

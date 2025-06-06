@@ -1,8 +1,4 @@
-﻿#nullable enable
-
-using System.Threading;
-
-namespace ChinesePinyinIntelliSenseExtender.Util;
+﻿namespace ChinesePinyinIntelliSenseExtender.Util;
 
 internal static class EnumerableExtend
 {

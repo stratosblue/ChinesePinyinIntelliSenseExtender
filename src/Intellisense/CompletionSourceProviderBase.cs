@@ -1,12 +1,11 @@
-﻿#nullable enable
-
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using System.Threading;
+
 using ChinesePinyinIntelliSenseExtender.Intellisense.SyncCompletion;
 using ChinesePinyinIntelliSenseExtender.Options;
+
 using Microsoft.VisualStudio.Utilities;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense;

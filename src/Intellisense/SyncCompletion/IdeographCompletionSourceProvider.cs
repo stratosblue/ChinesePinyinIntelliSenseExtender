@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System.ComponentModel.Composition;
+﻿using System.ComponentModel.Composition;
 
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;

@@ -1,8 +1,4 @@
-﻿#nullable enable
-
-using System.Threading;
-
-using ChinesePinyinIntelliSenseExtender.Options;
+﻿using ChinesePinyinIntelliSenseExtender.Options;
 
 using InputMethodDictionary;
 

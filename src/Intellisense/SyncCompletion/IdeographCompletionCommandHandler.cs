@@ -1,8 +1,9 @@
-﻿#nullable enable
-#pragma warning disable VSTHRD010
+﻿#pragma warning disable VSTHRD010
 
 using System.Runtime.InteropServices;
+
 using ChinesePinyinIntelliSenseExtender.Options;
+
 using Microsoft.VisualStudio;
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.OLE.Interop;

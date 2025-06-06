@@ -1,6 +1,5 @@
-﻿#nullable enable
+﻿using System.Diagnostics;
 
-using System.Diagnostics;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense.SyncCompletion;

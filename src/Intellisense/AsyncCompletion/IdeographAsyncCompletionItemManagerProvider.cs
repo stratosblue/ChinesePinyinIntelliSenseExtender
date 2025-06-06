@@ -1,7 +1,7 @@
-﻿#nullable enable
+﻿using System.ComponentModel.Composition;
 
-using System.ComponentModel.Composition;
 using ChinesePinyinIntelliSenseExtender.Options;
+
 using Microsoft.VisualStudio.Language.Intellisense.AsyncCompletion;
 using Microsoft.VisualStudio.Text.Editor;
 using Microsoft.VisualStudio.Text.PatternMatching;

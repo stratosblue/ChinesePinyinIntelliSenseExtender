@@ -1,9 +1,9 @@
-﻿#nullable enable
+﻿using System.Buffers;
 
-using System.Buffers;
 using ChinesePinyinIntelliSenseExtender.Internal;
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
+
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense.SyncCompletion;

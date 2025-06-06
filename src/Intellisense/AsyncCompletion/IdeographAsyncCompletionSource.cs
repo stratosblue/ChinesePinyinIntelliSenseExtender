@@ -1,9 +1,7 @@
-﻿#nullable enable
-
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Threading;
+
 using ChinesePinyinIntelliSenseExtender.Internal;
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;

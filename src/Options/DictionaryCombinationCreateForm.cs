@@ -4,9 +4,15 @@ namespace ChinesePinyinIntelliSenseExtender.Options;
 
 internal partial class DictionaryCombinationCreateForm : Form
 {
+    #region Public 属性
+
     public DictionaryDescriptor[] DictionaryDescriptors { get; }
 
     public List<DictionaryDescriptor> SelectedDictionaryDescriptors { get; private set; } = new();
+
+    #endregion Public 属性
+
+    #region Public 构造函数
 
     public DictionaryCombinationCreateForm(DictionaryDescriptor[] dictionaryDescriptors)
     {
@@ -18,6 +24,10 @@ internal partial class DictionaryCombinationCreateForm : Form
 
         listBoxUnselected.Items.AddRange(dictionaryDescriptors);
     }
+
+    #endregion Public 构造函数
+
+    #region Private 方法
 
     private void ButtonCreate_Click(object sender, EventArgs e)
     {
@@ -70,4 +80,6 @@ internal partial class DictionaryCombinationCreateForm : Form
     {
         buttonSelect.Enabled = listBoxUnselected.SelectedItem is not null;
     }
+
+    #endregion Private 方法
 }

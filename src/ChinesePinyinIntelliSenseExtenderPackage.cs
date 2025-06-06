@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
-using System.Threading;
 using System.Windows;
+
 using ChinesePinyinIntelliSenseExtender.Options;
 using ChinesePinyinIntelliSenseExtender.Util;
 

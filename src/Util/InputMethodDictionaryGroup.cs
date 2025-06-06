@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System.Buffers;
+﻿using System.Buffers;
 using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 

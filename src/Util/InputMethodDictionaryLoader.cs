@@ -1,7 +1,4 @@
-﻿#nullable enable
-
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Diagnostics;
 
 using InputMethodDictionary;
 

@@ -11,8 +11,12 @@ namespace ChinesePinyinIntelliSenseExtender.Options;
 /// </summary>
 internal sealed class OptionPages
 {
+    #region Public 类
+
     public sealed class DictionaryManage : OptionPage<DictionaryManageOptions>
     {
+        #region Protected 属性
+
         protected override IWin32Window Window
         {
             get
@@ -26,6 +30,10 @@ internal sealed class OptionPages
             }
         }
 
+        #endregion Protected 属性
+
+        #region Public 方法
+
         public override void SaveSettingsToStorage()
         {
             base.SaveSettingsToStorage();
@@ -34,9 +42,13 @@ internal sealed class OptionPages
 
             _ = InputMethodDictionaryGroupProvider.LoadFromOptionsAsync(options, default);
         }
+
+        #endregion Public 方法
     }
 
     public sealed class General : OptionPage<GeneralOptions>
     {
     }
+
+    #endregion Public 类
 }

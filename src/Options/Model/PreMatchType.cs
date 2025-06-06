@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace ChinesePinyinIntelliSenseExtender.Options;
+﻿namespace ChinesePinyinIntelliSenseExtender.Options;
 
 /// <summary>
 /// 预匹配类型

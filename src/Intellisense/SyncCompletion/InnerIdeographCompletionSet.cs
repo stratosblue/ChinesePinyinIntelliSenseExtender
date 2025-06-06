@@ -1,7 +1,7 @@
-﻿#nullable enable
+﻿using System.Globalization;
 
-using System.Globalization;
 using ChinesePinyinIntelliSenseExtender.Util;
+
 using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 

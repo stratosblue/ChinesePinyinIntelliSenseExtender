@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using Microsoft.VisualStudio.Language.Intellisense;
+﻿using Microsoft.VisualStudio.Language.Intellisense;
 using Microsoft.VisualStudio.Text;
 
 namespace ChinesePinyinIntelliSenseExtender.Intellisense.SyncCompletion;

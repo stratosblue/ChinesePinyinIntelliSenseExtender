@@ -4,7 +4,13 @@ namespace ChinesePinyinIntelliSenseExtender.Options;
 
 internal partial class DictionaryManagePage : UserControl
 {
+    #region Internal 属性
+
     internal DictionaryManageOptions Options { get; set; }
+
+    #endregion Internal 属性
+
+    #region Public 构造函数
 
     public DictionaryManagePage()
     {
@@ -14,16 +20,28 @@ internal partial class DictionaryManagePage : UserControl
         toolStripMenuItemDeleteSelectedDictionaryCombination.Enabled = false;
     }
 
+    #endregion Public 构造函数
+
+    #region Public 方法
+
     public void Initialize()
     {
         listBoxDictionaries.Items.AddRange(DictionaryDescriptor.BuiltInDictionaries.Concat(Options.CustomDictionaries).ToArray());
         LoadDictionaryCombinationTree();
     }
 
+    #endregion Public 方法
+
+    #region Protected 方法
+
     protected override void OnEnter(EventArgs e)
     {
         base.OnEnter(e);
     }
+
+    #endregion Protected 方法
+
+    #region Private 方法
 
     private void ButtonAddDictionary_Click(object sender, EventArgs e)
     {
@@ -154,4 +172,6 @@ internal partial class DictionaryManagePage : UserControl
             LoadDictionaryCombinationTree();
         }
     }
+
+    #endregion Private 方法
 }

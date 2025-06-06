@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-using System.Collections.Immutable;
+﻿using System.Collections.Immutable;
 
 using ChinesePinyinIntelliSenseExtender.Util;
 
@@ -11,12 +9,18 @@ namespace ChinesePinyinIntelliSenseExtender.Options;
 /// </summary>
 internal class DictionaryCombination : IEquatable<DictionaryCombination>
 {
+    #region Public 属性
+
     public string Name { get; set; }
 
     /// <summary>
     /// 已排序的字典列表
     /// </summary>
     public List<DictionaryDescriptor> OrderedDictionaries { get; set; } = new();
+
+    #endregion Public 属性
+
+    #region Public 构造函数
 
     public DictionaryCombination(string name)
     {
@@ -27,6 +31,10 @@ internal class DictionaryCombination : IEquatable<DictionaryCombination>
 
         Name = name;
     }
+
+    #endregion Public 构造函数
+
+    #region Public 方法
 
     public bool Equals(DictionaryCombination other) => GetHashCode() == other.GetHashCode();
 
@@ -41,11 +49,19 @@ internal class DictionaryCombination : IEquatable<DictionaryCombination>
         }
         return hashCode;
     }
+
+    #endregion Public 方法
 }
 
 internal class DictionaryManageOptions : Options<DictionaryManageOptions>
 {
+    #region Private 字段
+
     private List<DictionaryCombination> _dictionaryCombinations = new();
+
+    #endregion Private 字段
+
+    #region Public 属性
 
     /// <summary>
     /// 自定义字典
@@ -68,6 +84,10 @@ internal class DictionaryManageOptions : Options<DictionaryManageOptions>
         set => _dictionaryCombinations = value;
     }
 
+    #endregion Public 属性
+
+    #region Private 方法
+
     private List<DictionaryCombination> CreateDefaultDictionaryCombinations()
     {
         var result = new List<DictionaryCombination>();
@@ -75,6 +95,8 @@ internal class DictionaryManageOptions : Options<DictionaryManageOptions>
         result.Add(new($"默认 - {defaultDictionary.Name}") { OrderedDictionaries = new() { defaultDictionary } });
         return result;
     }
+
+    #endregion Private 方法
 }
 
 /// <summary>
@@ -82,6 +104,8 @@ internal class DictionaryManageOptions : Options<DictionaryManageOptions>
 /// </summary>
 internal class DictionaryDescriptor : IEquatable<DictionaryDescriptor>
 {
+    #region Public 属性
+
     /// <summary>
     /// 内建的字典列表
     /// </summary>
@@ -102,6 +126,10 @@ internal class DictionaryDescriptor : IEquatable<DictionaryDescriptor>
     /// </summary>
     public string Name { get; set; }
 
+    #endregion Public 属性
+
+    #region Public 构造函数
+
     public DictionaryDescriptor(string filePath, string name)
     {
         if (string.IsNullOrWhiteSpace(filePath))
@@ -113,6 +141,10 @@ internal class DictionaryDescriptor : IEquatable<DictionaryDescriptor>
         Name = name;
     }
 
+    #endregion Public 构造函数
+
+    #region Public 方法
+
     public bool Equals(DictionaryDescriptor other)
     {
         return FilePath == other.FilePath;
@@ -121,4 +153,6 @@ internal class DictionaryDescriptor : IEquatable<DictionaryDescriptor>
     public override int GetHashCode() => FilePath.GetHashCode();
 
     public override string ToString() => $"{Name}[{FilePath}]";
+
+    #endregion Public 方法
 }

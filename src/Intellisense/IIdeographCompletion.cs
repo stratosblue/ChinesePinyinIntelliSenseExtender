@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace ChinesePinyinIntelliSenseExtender.Intellisense;
+﻿namespace ChinesePinyinIntelliSenseExtender.Intellisense;
 
 /// <summary>
 /// 表意文字完成项

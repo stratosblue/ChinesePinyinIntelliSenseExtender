@@ -1,6 +1,5 @@
-﻿#nullable enable
+﻿using ChinesePinyinIntelliSenseExtender.Intellisense;
 
-using ChinesePinyinIntelliSenseExtender.Intellisense;
 using Microsoft.VisualStudio.Language.Intellisense;
 
 namespace ChinesePinyinIntelliSenseExtender.Util;

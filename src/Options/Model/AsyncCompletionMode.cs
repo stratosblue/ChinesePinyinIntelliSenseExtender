@@ -1,6 +1,4 @@
-﻿#nullable enable
-
-namespace ChinesePinyinIntelliSenseExtender.Options;
+﻿namespace ChinesePinyinIntelliSenseExtender.Options;
 
 /// <summary>
 /// 异步完成模式
